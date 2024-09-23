@@ -1,0 +1,15 @@
+{
+  "first_names": [
+    "John", "Jane", "Michael", "Emily", "David", "Sarah", "Christopher", "Jessica", "Matthew", "Ashley",
+    "Daniel", "Jennifer", "James", "Lisa", "Robert", "Michelle", "William", "Elizabeth", "Joseph", "Kimberly"
+  ],
+  "last_names": [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+    "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"
+  ],
+  "gamertags": [
+    "ShadowWalker", "NinjaSlayer", "ThunderBolt", "PixelHunter", "CyberNova", "MidnightHawk", "StormRider",
+    "FrostBite", "BlazeFury", "QuantumLeap", "SilentSpectre", "NeonPhoenix", "IronWolf", "CosmicCrusader",
+    "VortexViper", "LunarLegend", "OmegaOps", "RadiantReaper", "EchoElite", "ZenithZephyr"
+  ]
+}
