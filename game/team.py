@@ -2,8 +2,9 @@ from .player import Player
 import random
 
 class Team:
-    def __init__(self, name):
+    def __init__(self, name, region):
         self.name = name
+        self.region = region
         self.players = [Player() for _ in range(5)]  # 5 players per team
 
     def manage_roster(self):
@@ -16,4 +17,4 @@ class Team:
             print(f"{self.name}: {leaving_player} left, {new_player} joined")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.region})"

@@ -7,7 +7,7 @@ class League:
 
     def __init__(self, name):
         self.name = name
-        self.teams = [Team(team_name) for team_name in self.team_names[name]]
+        self.teams = [Team(team_name, self.name) for team_name in self.team_names[name]]
         self.season = None
 
     def run_off_season(self):

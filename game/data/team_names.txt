@@ -1,27 +1,47 @@
 [Americas]
-New York Navigators
-Los Angeles Legends
-Toronto Titans
-Mexico City Mavericks
-São Paulo Strikers
+100 Thieves
+Sentinels
+Cloud9
+NRG
+LOUD
+Furia
+MiBR
+Leviatan
+Kru Esports
+Evil Geniuses
 
 [Europe]
-London Lightning
-Paris Phantoms
-Berlin Blitz
-Madrid Matadors
-Stockholm Sentinels
+BBL Esports
+Fnatic
+G2 Esports
+Team Vitality
+FUT Esports
+Karmine Corp
+KOI
+Natus Vincere
+Team Liquid
+Team Heretics
 
 [China]
-Beijing Dragons
-Shanghai Sharks
-Guangzhou Guardians
-Chengdu Chimeras
-Xi'an Warriors
+All Gamers
+Bilibili Gaming
+EDward Gaming
+FunPlus Phoenix
+JD Gaming
+Nova Esports
+Titan Esports Club
+Trace Esports
+TYLOO
+Wolves Esports
 
 [Pacific]
-Tokyo Tsunamis
-Seoul Seekers
-Sydney Stingers
-Manila Maniacs
-Bangkok Blasters
+DetonatioN FocusMe
+Gen.G Esports
+DRX
+Paper Rex
+Global Esports
+Rex Regum Qeon
+T1
+Talon Esports
+Team Secret
+ZETA DIVISION
