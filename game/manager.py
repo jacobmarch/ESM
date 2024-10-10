@@ -16,6 +16,9 @@ class GameManager:
         while True:
             print(f"\n--- Year {self.current_year} ---")
             self.run_off_season()
+            input("Press Enter to view the preseason preview...")
+            
+            self.run_preseason()
             input("Press Enter to start the regular season...")
             
             self.run_regular_season()
@@ -30,9 +33,16 @@ class GameManager:
             input("Press Enter to advance to the next year...")
 
     def run_off_season(self):
-        print(f"Running off-season for year {self.current_year}")
+        print(f"\nRunning off-season for year {self.current_year}")
         for league in self.leagues:
+            print(f"\n{league.name} Off-Season:")
             league.run_off_season()
+
+    def run_preseason(self):
+        print(f"\nPreseason Preview for year {self.current_year}")
+        for league in self.leagues:
+            print(f"\n{league.name} Preseason Preview:")
+            league.generate_preseason_preview()
 
     def run_regular_season(self):
         print(f"Running regular season for year {self.current_year}")

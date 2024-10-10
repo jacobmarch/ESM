@@ -6,12 +6,16 @@ class Match:
         self.away_team = away_team
 
     def play(self):
+        home_skill = sum(player.skill for player in self.home_team.players)
+        away_skill = sum(player.skill for player in self.away_team.players)
+        total_skill = home_skill + away_skill
+
         home_score = 0
         away_score = 0
 
         while True:
-            # Play a round
-            if random.random() < 0.5:
+            # Use weighted probability based on team skills
+            if random.random() < (home_skill / total_skill) * 0.6 + 0.2:  # 0.2 to 0.8 probability range
                 home_score += 1
             else:
                 away_score += 1
@@ -23,11 +27,10 @@ class Match:
             # Check for overtime
             if home_score == 12 and away_score == 12:
                 while abs(home_score - away_score) < 2:
-                    if random.random() < 0.5:
+                    if random.random() < (home_skill / total_skill) * 0.6 + 0.2:
                         home_score += 1
                     else:
                         away_score += 1
-                break
 
         if home_score > away_score:
             winner = self.home_team
