@@ -1,4 +1,5 @@
 from .match import Match
+from .tournament import DoubleEliminationTournament
 import random
 
 class WorldChampionship:
@@ -18,12 +19,17 @@ class WorldChampionship:
             return
 
         # Knockout Stage
-        champion = self.run_knockout_stage(group_winners)
+        print("\nWorld Championship Knockout Stage:")
+        tournament = DoubleEliminationTournament(group_winners)
+        tournament.run()
+        final_standings = tournament.get_standings()
         
-        if champion:
-            print(f"The World Champion is: {champion.name}")
-        else:
-            print("Error: No champion determined.")
+        print("\nWorld Championship Final Standings:")
+        for i, team in enumerate(final_standings[:4], 1):
+            print(f"{i}. {team.name}")
+
+        champion = final_standings[0]
+        print(f"\nThe World Champion is: {champion.name}")
 
     def create_balanced_groups(self):
         # Separate teams by region
