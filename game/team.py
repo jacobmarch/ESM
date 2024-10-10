@@ -1,16 +1,19 @@
+from .player import Player
+import random
+
 class Team:
-    def __init__(self, team_name, players=None):
-        self.team_name = team_name
-        self.players = players if players else []
+    def __init__(self, name):
+        self.name = name
+        self.players = [Player() for _ in range(5)]  # 5 players per team
 
-    def add_player(self, player):
-        if len(self.players) < 10:
-            self.players.append(player)
-        else:
-            raise ValueError("Cannot add more than 10 players to the team.")
-
-    def remove_player(self, player):
-        self.players.remove(player)
+    def manage_roster(self):
+        # Simplified roster management
+        if random.random() < 0.3:  # 30% chance of a roster change
+            leaving_player = random.choice(self.players)
+            self.players.remove(leaving_player)
+            new_player = Player()
+            self.players.append(new_player)
+            print(f"{self.name}: {leaving_player} left, {new_player} joined")
 
     def __str__(self):
-        return f"Team {self.team_name} with {len(self.players)} players."
+        return self.name

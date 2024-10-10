@@ -1,0 +1,27 @@
+[Americas]
+New York Navigators
+Los Angeles Legends
+Toronto Titans
+Mexico City Mavericks
+São Paulo Strikers
+
+[Europe]
+London Lightning
+Paris Phantoms
+Berlin Blitz
+Madrid Matadors
+Stockholm Sentinels
+
+[China]
+Beijing Dragons
+Shanghai Sharks
+Guangzhou Guardians
+Chengdu Chimeras
+Xi'an Warriors
+
+[Pacific]
+Tokyo Tsunamis
+Seoul Seekers
+Sydney Stingers
+Manila Maniacs
+Bangkok Blasters
