@@ -37,6 +37,7 @@ class GameManager:
     def run_regular_season(self):
         print(f"Running regular season for year {self.current_year}")
         for league in self.leagues:
+            print(f"\n{league.name} Regular Season:")
             league.run_regular_season()
 
     def run_playoffs(self):

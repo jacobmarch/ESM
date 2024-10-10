@@ -16,7 +16,7 @@ class Season:
                     result = match.play()
                     self.update_standings(result)
                     self.matches.append(match)
-                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['rounds_played']} rounds)")
+                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
         self.print_standings()
 
     def update_standings(self, result):
@@ -26,27 +26,26 @@ class Season:
         sorted_teams = sorted(self.standings.items(), key=lambda x: x[1], reverse=True)
         return [team for team, _ in sorted_teams[:count]]
 
-    def run_playoffs(self):
-        print("Running playoffs")
+    def run_playoffs(self, league_name):
         top_teams = self.get_top_teams(4)
         semifinals = [
             Match(top_teams[0], top_teams[3]),
             Match(top_teams[1], top_teams[2])
         ]
-        print("\nSemi-finals:")
+        print(f"\n{league_name} Semi-finals:")
         finalists = []
         for match in semifinals:
             result = match.play()
-            print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['rounds_played']} rounds)")
+            print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
             finalists.append(result['winner'])
         
-        print("\nFinal:")
+        print(f"\n{league_name} Final:")
         final = Match(finalists[0], finalists[1])
         result = final.play()
-        print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['rounds_played']} rounds)")
+        print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
         champion = result['winner']
         runner_up = result['loser']
-        print(f"The champion of the playoffs is: {champion.name}")
+        print(f"The champion of the {league_name} playoffs is: {champion.name}")
         print(f"The runner-up is: {runner_up.name}")
 
     def print_standings(self):

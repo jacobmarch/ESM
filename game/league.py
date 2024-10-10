@@ -21,13 +21,14 @@ class League:
 
     def run_playoffs(self):
         if self.season:
-            self.season.run_playoffs()
+            print(f"\n{self.name} Playoffs:")
+            self.season.run_playoffs(self.name)
         else:
-            print("Error: Regular season hasn't been played yet.")
+            print(f"Error: Regular season hasn't been played yet for {self.name}.")
 
     def get_top_teams(self, count):
         if self.season:
             return self.season.get_top_teams(count)
         else:
-            print("Error: Season hasn't been played yet.")
+            print(f"Error: Season hasn't been played yet for {self.name}.")
             return []

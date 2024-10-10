@@ -31,7 +31,7 @@ class WorldChampionship:
                     if home != away:
                         match = Match(home, away)
                         result = match.play()
-                        print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['rounds_played']} rounds)")
+                        print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
                         standings[result['winner']] += 3
             
             print(f"\nGroup {i+1} Standings:")
@@ -54,7 +54,7 @@ class WorldChampionship:
                     team1, team2 = rounds[-1][i], rounds[-1][i+1]
                     match = Match(team1, team2)
                     result = match.play()
-                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['rounds_played']} rounds)")
+                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
                     next_round.append(result['winner'])
                     print(f"Winner: {result['winner'].name}")
             rounds.append(next_round)

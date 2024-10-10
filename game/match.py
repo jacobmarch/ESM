@@ -8,7 +8,6 @@ class Match:
     def play(self):
         home_score = 0
         away_score = 0
-        rounds_played = 0
 
         while True:
             # Play a round
@@ -16,7 +15,6 @@ class Match:
                 home_score += 1
             else:
                 away_score += 1
-            rounds_played += 1
 
             # Check for regulation win
             if (home_score >= 13 or away_score >= 13) and abs(home_score - away_score) >= 2:
@@ -29,7 +27,6 @@ class Match:
                         home_score += 1
                     else:
                         away_score += 1
-                    rounds_played += 1
                 break
 
         if home_score > away_score:
@@ -45,8 +42,7 @@ class Match:
             'home_score': home_score,
             'away_score': away_score,
             'winner': winner,
-            'loser': loser,
-            'rounds_played': rounds_played
+            'loser': loser
         }
 
     def __str__(self):
