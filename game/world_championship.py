@@ -20,7 +20,8 @@ class WorldChampionship:
 
         # Knockout Stage
         print("\nWorld Championship Knockout Stage:")
-        tournament = DoubleEliminationTournament(group_winners)
+        knockout_teams = self.create_knockout_matchups(group_winners)
+        tournament = DoubleEliminationTournament(knockout_teams)
         tournament.run()
         final_standings = tournament.get_standings()
         
@@ -89,6 +90,27 @@ class WorldChampionship:
             print(f"Group {i+1} Winners: 1. {first_seed.name}, 2. {second_seed.name}")
 
         return group_winners
+
+    def create_knockout_matchups(self, group_winners):
+        # Separate 1st and 2nd place teams
+        first_place = group_winners[::2]
+        second_place = group_winners[1::2]
+
+        # Shuffle second place teams
+        random.shuffle(second_place)
+
+        # Create matchups ensuring teams from the same group don't face each other
+        matchups = []
+        for i, team in enumerate(first_place):
+            # Find a second place team not from the same group
+            for opponent in second_place:
+                if opponent not in group_winners[i*2:(i+1)*2]:
+                    matchups.append(team)
+                    matchups.append(opponent)
+                    second_place.remove(opponent)
+                    break
+
+        return matchups
 
     def run_knockout_stage(self, teams):
         print("\nKnockout Stage:")

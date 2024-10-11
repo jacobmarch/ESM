@@ -1,3 +1,4 @@
+import numpy as np
 from .player import Player
 import random
 
@@ -20,8 +21,11 @@ class Team:
                     self.players.append(new_player)
                     print(f"{self.name}: {player} left, {new_player} joined for {new_player.contract_length} years")
 
+    def get_average_skill(self):
+        return np.mean([player.skill for player in self.players])
+
     def __str__(self):
-        return f"{self.name} ({self.region})"
+        return f"{self.name} ({self.region}) - Avg Skill: {self.get_average_skill():.2f}"
 
     def __repr__(self):
         return self.__str__()

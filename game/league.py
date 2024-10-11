@@ -10,6 +10,7 @@ class League:
         self.name = name
         self.teams = [Team(team_name, self.name) for team_name in self.team_names[name]]
         self.season = None
+        self.playoff_results = None
 
     def run_off_season(self):
         print(f"Running off-season for {self.name}")
@@ -18,24 +19,23 @@ class League:
 
     def generate_preseason_preview(self):
         # Sort teams by average player skill
-        sorted_teams = sorted(self.teams, key=lambda t: sum(p.skill for p in t.players) / len(t.players), reverse=True)
+        sorted_teams = sorted(self.teams, key=lambda t: t.get_average_skill(), reverse=True)
         
         # Display top 5 teams
         print(f"Top 5 teams in {self.name}:")
         for i, team in enumerate(sorted_teams[:5], 1):
-            avg_skill = sum(p.skill for p in team.players) / len(team.players)
-            print(f"{i}. {team.name} (Avg. Skill: {avg_skill:.2f})")
+            print(f"{i}. {team.name} (Avg. Skill: {team.get_average_skill():.2f})")
         
         # Get all players from all teams
-        all_players = [player for team in self.teams for player in team.players]
+        all_players = [(player, team) for team in self.teams for player in team.players]
         
         # Sort players by skill
-        sorted_players = sorted(all_players, key=lambda p: p.skill, reverse=True)
+        sorted_players = sorted(all_players, key=lambda x: x[0].skill, reverse=True)
         
         # Display top 10 players
         print(f"\nTop 10 players in {self.name}:")
-        for i, player in enumerate(sorted_players[:10], 1):
-            print(f"{i}. {player} (Skill: {player.skill})")
+        for i, (player, team) in enumerate(sorted_players[:10], 1):
+            print(f"{i}. {player} - {team.name}")
 
     def run_regular_season(self):
         self.season = Season(self.teams)
@@ -47,10 +47,10 @@ class League:
             top_teams = self.season.get_top_teams(8)  # Get top 8 teams for playoffs
             tournament = DoubleEliminationTournament(top_teams)
             tournament.run()
-            final_standings = tournament.get_standings()
+            self.playoff_results = tournament.get_standings()
             
             print(f"\n{self.name} Playoff Results:")
-            for i, team in enumerate(final_standings[:4], 1):
+            for i, team in enumerate(self.playoff_results[:4], 1):
                 print(f"{i}. {team.name}")
         else:
             print(f"Error: Regular season hasn't been played yet for {self.name}.")
@@ -61,3 +61,6 @@ class League:
         else:
             print(f"Error: Season hasn't been played yet for {self.name}.")
             return []
+
+    def get_playoff_results(self):
+        return self.playoff_results

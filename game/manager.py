@@ -59,7 +59,15 @@ class GameManager:
         print(f"Running World Championship for year {self.current_year}")
         qualified_teams = []
         for league in self.leagues:
-            qualified_teams.extend(league.get_top_teams(4))
-        
-        world_championship = WorldChampionship(qualified_teams)
-        world_championship.run()
+            playoff_results = league.get_playoff_results()
+            if playoff_results:
+                qualified_teams.extend(playoff_results[:4])  # Take only top 4 teams
+            else:
+                print(f"Error: Playoffs haven't been run for {league.name}.")
+                return
+
+        if len(qualified_teams) == 16:  # Ensure we have exactly 16 teams
+            world_championship = WorldChampionship(qualified_teams)
+            world_championship.run()
+        else:
+            print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
