@@ -1,6 +1,7 @@
 from .season import Season
 from .team import Team
 from .utils import load_team_names
+from .tournament import DoubleEliminationTournament
 
 class League:
     team_names = load_team_names()
@@ -43,7 +44,14 @@ class League:
     def run_playoffs(self):
         if self.season:
             print(f"\n{self.name} Playoffs:")
-            self.season.run_playoffs(self.name)
+            top_teams = self.season.get_top_teams(8)  # Get top 8 teams for playoffs
+            tournament = DoubleEliminationTournament(top_teams)
+            tournament.run()
+            final_standings = tournament.get_standings()
+            
+            print(f"\n{self.name} Playoff Results:")
+            for i, team in enumerate(final_standings[:4], 1):
+                print(f"{i}. {team.name}")
         else:
             print(f"Error: Regular season hasn't been played yet for {self.name}.")
 

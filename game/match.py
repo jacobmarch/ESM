@@ -21,16 +21,21 @@ class Match:
                 away_score += 1
 
             # Check for regulation win
-            if (home_score >= 13 or away_score >= 13) and abs(home_score - away_score) >= 2:
+            if home_score == 13 and away_score <= 11:
+                break
+            if away_score == 13 and home_score <= 11:
                 break
 
             # Check for overtime
-            if home_score == 12 and away_score == 12:
-                while abs(home_score - away_score) < 2:
-                    if random.random() < (home_skill / total_skill) * 0.6 + 0.2:
-                        home_score += 1
-                    else:
-                        away_score += 1
+            if home_score >= 12 and away_score >= 12:
+                if abs(home_score - away_score) == 2:
+                    break
+
+        # Ensure the score difference is exactly 2 if a team wins with more than 13 points
+        if home_score > 13:
+            home_score = away_score + 2
+        elif away_score > 13:
+            away_score = home_score + 2
 
         if home_score > away_score:
             winner = self.home_team

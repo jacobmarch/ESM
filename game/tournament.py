@@ -7,6 +7,7 @@ class DoubleEliminationTournament:
         self.lower_bracket = []
         self.results = []
         self.grand_finalist = None
+        self.champion = None
 
     def run(self):
         self.upper_bracket = self.teams.copy()
@@ -24,7 +25,8 @@ class DoubleEliminationTournament:
             grand_final = Match(self.grand_finalist, self.lower_bracket[0])
             result = grand_final.play()
             print(f"Grand Finals: {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
-            self.results = [result['winner'], result['loser']] + self.results
+            self.champion = result['winner']
+            self.results = [result['loser']] + self.results
 
     def play_upper_bracket(self):
         if len(self.upper_bracket) > 1:
@@ -59,6 +61,8 @@ class DoubleEliminationTournament:
             self.lower_bracket = next_round
 
     def get_standings(self):
-        if self.grand_finalist:
+        if self.champion:
+            return [self.champion] + [self.results[0]] + self.results[1:]
+        elif self.grand_finalist:
             return [self.grand_finalist] + self.results + self.lower_bracket
         return self.results + self.upper_bracket + self.lower_bracket
