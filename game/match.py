@@ -1,12 +1,40 @@
 import random
-import math
 
 class Match:
-    def __init__(self, home_team, away_team):
+    def __init__(self, home_team, away_team, best_of=3):
         self.home_team = home_team
         self.away_team = away_team
+        self.best_of = best_of
 
     def play(self):
+        home_wins = 0
+        away_wins = 0
+        games_to_win = (self.best_of // 2) + 1
+        games_played = []
+
+        while home_wins < games_to_win and away_wins < games_to_win:
+            home_score, away_score = self.simulate_game()
+            games_played.append((home_score, away_score))
+
+            if home_score > away_score:
+                home_wins += 1
+            else:
+                away_wins += 1
+
+        winner = self.home_team if home_wins > away_wins else self.away_team
+        loser = self.away_team if home_wins > away_wins else self.home_team
+
+        return {
+            'home_team': self.home_team,
+            'away_team': self.away_team,
+            'home_score': home_wins,
+            'away_score': away_wins,
+            'winner': winner,
+            'loser': loser,
+            'games': games_played
+        }
+
+    def simulate_game(self):
         home_skill = self.home_team.get_average_skill()
         away_skill = self.away_team.get_average_skill()
         
@@ -41,21 +69,7 @@ class Match:
         elif away_score > 13:
             away_score = home_score + 2
 
-        if home_score > away_score:
-            winner = self.home_team
-            loser = self.away_team
-        else:
-            winner = self.away_team
-            loser = self.home_team
-
-        return {
-            'home_team': self.home_team,
-            'away_team': self.away_team,
-            'home_score': home_score,
-            'away_score': away_score,
-            'winner': winner,
-            'loser': loser
-        }
+        return home_score, away_score
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name}"

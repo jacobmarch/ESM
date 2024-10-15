@@ -9,15 +9,15 @@ class DoubleEliminationTournament:
         self.results = []
         self.grand_finalist = None
         self.champion = None
+        self.round_number = 0
 
     def run(self):
-        round_number = 1
-
         while len(self.upper_bracket) + len(self.lower_bracket) > 1:
-            print(f"\nRound {round_number}")
+            self.round_number += 1
+            print(f"\nRound {self.round_number}")
             self.play_upper_bracket()
             
-            if round_number == 1:
+            if self.round_number == 1:
                 # After first round, losers go directly to lower bracket
                 self.lower_bracket.extend(self.upper_bracket_losers)
                 self.upper_bracket_losers.clear()
@@ -25,26 +25,25 @@ class DoubleEliminationTournament:
                 self.play_lower_bracket_with_upper_losers()
             
             self.play_lower_bracket()
-            round_number += 1
 
-        # Grand Finals
+        # Grand Finals (Best of 5)
         if self.grand_finalist and len(self.lower_bracket) == 1:
-            print("\nGrand Finals")
-            grand_final = Match(self.grand_finalist, self.lower_bracket[0])
+            print("\nGrand Finals (Best of 5)")
+            grand_final = Match(self.grand_finalist, self.lower_bracket[0], best_of=5)
             result = grand_final.play()
-            print(f"Grand Finals: {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+            self.print_match_result(result)
             self.champion = result['winner']
             self.results.insert(0, result['loser'])
 
     def play_upper_bracket(self):
         if len(self.upper_bracket) > 1:
-            print("Upper Bracket:")
+            print("Upper Bracket (Best of 3):")
             next_round = []
             for i in range(0, len(self.upper_bracket), 2):
                 if i + 1 < len(self.upper_bracket):
-                    match = Match(self.upper_bracket[i], self.upper_bracket[i+1])
+                    match = Match(self.upper_bracket[i], self.upper_bracket[i+1], best_of=3)
                     result = match.play()
-                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+                    self.print_match_result(result)
                     next_round.append(result['winner'])
                     self.upper_bracket_losers.append(result['loser'])
                 else:
@@ -54,12 +53,13 @@ class DoubleEliminationTournament:
             self.grand_finalist = self.upper_bracket.pop()
 
     def play_lower_bracket_with_upper_losers(self):
-        print("Lower Bracket (with Upper Bracket Losers):")
+        print("Lower Bracket with Upper Bracket Losers:")
         next_round = []
         for i in range(min(len(self.lower_bracket), len(self.upper_bracket_losers))):
-            match = Match(self.lower_bracket[i], self.upper_bracket_losers[i])
+            best_of = 5 if len(self.lower_bracket) == 1 and len(self.upper_bracket_losers) == 1 else 3
+            match = Match(self.lower_bracket[i], self.upper_bracket_losers[i], best_of=best_of)
             result = match.play()
-            print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+            self.print_match_result(result)
             next_round.append(result['winner'])
             self.results.insert(0, result['loser'])
         
@@ -76,9 +76,10 @@ class DoubleEliminationTournament:
             next_round = []
             for i in range(0, len(self.lower_bracket), 2):
                 if i + 1 < len(self.lower_bracket):
-                    match = Match(self.lower_bracket[i], self.lower_bracket[i+1])
+                    best_of = 5 if len(self.lower_bracket) == 2 and self.grand_finalist else 3
+                    match = Match(self.lower_bracket[i], self.lower_bracket[i+1], best_of=best_of)
                     result = match.play()
-                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+                    self.print_match_result(result)
                     next_round.append(result['winner'])
                     self.results.insert(0, result['loser'])
                 else:
@@ -91,3 +92,10 @@ class DoubleEliminationTournament:
         elif self.grand_finalist:
             return [self.grand_finalist] + self.lower_bracket + self.results
         return self.upper_bracket + self.lower_bracket + self.results
+
+    def print_match_result(self, result):
+        print(f"{'(Best of 5)' if result['home_score'] + result['away_score'] > 3 else '(Best of 3)'} "
+              f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+        for i, (home_score, away_score) in enumerate(result['games'], 1):
+            print(f"  Game {i}: {result['home_team'].name} {home_score} - {away_score} {result['away_team'].name}")
+        print(f"  Winner: {result['winner'].name}")
