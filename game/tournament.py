@@ -96,6 +96,7 @@ class DoubleEliminationTournament:
     def print_match_result(self, result):
         print(f"{'(Best of 5)' if result['home_score'] + result['away_score'] > 3 else '(Best of 3)'} "
               f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
-        for i, (home_score, away_score) in enumerate(result['games'], 1):
+        for i, game_result in enumerate(result['games'], 1):
+            home_score, away_score, _ = game_result
             print(f"  Game {i}: {result['home_team'].name} {home_score} - {away_score} {result['away_team'].name}")
         print(f"  Winner: {result['winner'].name}")
