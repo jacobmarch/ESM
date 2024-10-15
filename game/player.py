@@ -9,8 +9,8 @@ class Player:
 
     @staticmethod
     def generate_skill():
-        # Use a normal distribution with mean 75 and standard deviation 8
-        skill = int(np.random.normal(75, 8))
+        # Use a normal distribution with mean 75 and standard deviation 10
+        skill = int(np.random.normal(75, 10))
         # Clamp the skill between 50 and 100
         return max(50, min(100, skill))
 
