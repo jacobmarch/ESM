@@ -11,49 +11,62 @@ class GameManager:
             League("Pacific")
         ]
         self.current_year = 2023
+        self.current_phase = "Off-Season"
+        self.phases = ["Off-Season", "Preseason", "Regular Season", "Playoffs", "World Championship"]
 
     def start_game(self):
         while True:
             print(f"\n--- Year {self.current_year} ---")
-            self.run_off_season()
-            input("Press Enter to view the preseason preview...")
-            
-            self.run_preseason()
-            input("Press Enter to start the regular season...")
-            
-            self.run_regular_season()
-            input("Press Enter to start the playoffs...")
-            
-            self.run_playoffs()
-            input("Press Enter to start the World Championship...")
-            
-            self.run_world_championship()
-            
-            self.current_year += 1
-            input("Press Enter to advance to the next year...")
+            print(f"Current Phase: {self.current_phase}")
+            self.main_menu()
 
-    def run_off_season(self):
-        print(f"\nRunning off-season for year {self.current_year}")
-        for league in self.leagues:
+    def main_menu(self):
+        while True:
+            print("\nMain Menu:")
+            for i, league in enumerate(self.leagues, 1):
+                print(f"{i}. View {league.name}")
+            print(f"{len(self.leagues) + 1}. Advance to Next Phase")
+            print(f"{len(self.leagues) + 2}. Exit Game")
+
+            choice = input(f"Enter your choice (1-{len(self.leagues) + 2}): ")
+
+            if choice in [str(i) for i in range(1, len(self.leagues) + 1)]:
+                self.view_league(self.leagues[int(choice) - 1])
+            elif choice == str(len(self.leagues) + 1):
+                self.advance_phase()
+            elif choice == str(len(self.leagues) + 2):
+                print("Thank you for playing!")
+                exit()
+            else:
+                print("Invalid choice. Please try again.")
+
+    def view_league(self, league):
+        if self.current_phase == "Off-Season":
             print(f"\n{league.name} Off-Season:")
             league.run_off_season()
-
-    def run_preseason(self):
-        print(f"\nPreseason Preview for year {self.current_year}")
-        for league in self.leagues:
+        elif self.current_phase == "Preseason":
             print(f"\n{league.name} Preseason Preview:")
             league.generate_preseason_preview()
-
-    def run_regular_season(self):
-        print(f"Running regular season for year {self.current_year}")
-        for league in self.leagues:
-            print(f"\n{league.name} Regular Season:")
+        elif self.current_phase == "Regular Season":
+            print(f"\nRunning {league.name} Regular Season:")
             league.run_regular_season()
-
-    def run_playoffs(self):
-        print(f"Running playoffs for year {self.current_year}")
-        for league in self.leagues:
+        elif self.current_phase == "Playoffs":
+            print(f"\nRunning {league.name} Playoffs:")
             league.run_playoffs()
+        input("Press Enter to continue...")
+
+    def advance_phase(self):
+        current_index = self.phases.index(self.current_phase)
+        if current_index < len(self.phases) - 1:
+            self.current_phase = self.phases[current_index + 1]
+            print(f"\nAdvancing to {self.current_phase}")
+            if self.current_phase == "World Championship":
+                self.run_world_championship()
+        else:
+            self.current_year += 1
+            self.current_phase = self.phases[0]
+            print(f"\nAdvancing to Year {self.current_year}")
+        input("Press Enter to continue...")
 
     def run_world_championship(self):
         print(f"Running World Championship for year {self.current_year}")
@@ -71,3 +84,4 @@ class GameManager:
             world_championship.run()
         else:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
+        input("Press Enter to continue...")
