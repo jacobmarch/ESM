@@ -40,19 +40,37 @@ class GameManager:
             else:
                 print("Invalid choice. Please try again.")
 
+    def simulate_current_phase(self):
+        print(f"Simulating {self.current_phase}...")
+        if self.current_phase == "Off-Season":
+            for league in self.leagues:
+                league.run_off_season()
+        elif self.current_phase == "Preseason":
+            for league in self.leagues:
+                league.generate_preseason_preview()
+        elif self.current_phase == "Regular Season":
+            for league in self.leagues:
+                league.run_regular_season()
+        elif self.current_phase == "Playoffs":
+            for league in self.leagues:
+                league.run_playoffs()
+        elif self.current_phase == "World Championship":
+            self.run_world_championship()
+        print(f"{self.current_phase} simulation complete.")
+
     def view_league(self, league):
         if self.current_phase == "Off-Season":
-            print(f"\n{league.name} Off-Season:")
-            league.run_off_season()
+            print(f"\n{league.name} Off-Season Results:")
+            league.display_off_season_results()
         elif self.current_phase == "Preseason":
             print(f"\n{league.name} Preseason Preview:")
-            league.generate_preseason_preview()
+            league.display_preseason_preview()
         elif self.current_phase == "Regular Season":
-            print(f"\nRunning {league.name} Regular Season:")
-            league.run_regular_season()
+            print(f"\n{league.name} Regular Season Results:")
+            league.display_regular_season_results()
         elif self.current_phase == "Playoffs":
-            print(f"\nRunning {league.name} Playoffs:")
-            league.run_playoffs()
+            print(f"\n{league.name} Playoff Results:")
+            league.display_playoff_results()
         input("Press Enter to continue...")
 
     def advance_phase(self):
@@ -60,12 +78,12 @@ class GameManager:
         if current_index < len(self.phases) - 1:
             self.current_phase = self.phases[current_index + 1]
             print(f"\nAdvancing to {self.current_phase}")
-            if self.current_phase == "World Championship":
-                self.run_world_championship()
+            self.simulate_current_phase()  # Simulate the new phase immediately
         else:
             self.current_year += 1
             self.current_phase = self.phases[0]
             print(f"\nAdvancing to Year {self.current_year}")
+            self.simulate_current_phase()  # Simulate the new year's first phase
         input("Press Enter to continue...")
 
     def run_world_championship(self):

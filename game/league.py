@@ -11,20 +11,22 @@ class League:
         self.teams = [Team(team_name, self.name) for team_name in self.team_names[name]]
         self.season = None
         self.playoff_results = None
+        self.off_season_results = None
+        self.preseason_preview = None
 
     def run_off_season(self):
         print(f"Running off-season for {self.name}")
+        self.off_season_results = []
         for team in self.teams:
-            team.manage_roster()
+            team_changes = team.manage_roster()
+            self.off_season_results.append((team.name, team_changes))
 
     def generate_preseason_preview(self):
         # Sort teams by average player skill
         sorted_teams = sorted(self.teams, key=lambda t: t.get_average_skill(), reverse=True)
         
-        # Display top 5 teams
-        print(f"Top 5 teams in {self.name}:")
-        for i, team in enumerate(sorted_teams[:5], 1):
-            print(f"{i}. {team.name} (Avg. Skill: {team.get_average_skill():.2f})")
+        # Get top 5 teams
+        top_teams = sorted_teams[:5]
         
         # Get all players from all teams
         all_players = [(player, team) for team in self.teams for player in team.players]
@@ -32,10 +34,13 @@ class League:
         # Sort players by skill
         sorted_players = sorted(all_players, key=lambda x: x[0].skill, reverse=True)
         
-        # Display top 10 players
-        print(f"\nTop 10 players in {self.name}:")
-        for i, (player, team) in enumerate(sorted_players[:10], 1):
-            print(f"{i}. {player} - {team.name}")
+        # Get top 10 players
+        top_players = sorted_players[:10]
+
+        self.preseason_preview = {
+            'top_teams': top_teams,
+            'top_players': top_players
+        }
 
     def run_regular_season(self):
         self.season = Season(self.teams)
@@ -48,12 +53,46 @@ class League:
             tournament = DoubleEliminationTournament(top_teams)
             tournament.run()
             self.playoff_results = tournament.get_standings()
+        else:
+            print(f"Error: Regular season hasn't been played yet for {self.name}.")
+
+    def display_off_season_results(self):
+        if self.off_season_results:
+            for team_name, changes in self.off_season_results:
+                print(f"{team_name}:")
+                for change in changes:
+                    print(f"  - {change}")
+        else:
+            print("No off-season results available.")
+
+    def display_preseason_preview(self):
+        if self.preseason_preview:
+            print("Top 5 teams:")
+            for i, team in enumerate(self.preseason_preview['top_teams'], 1):
+                print(f"{i}. {team.name} (Avg. Skill: {team.get_average_skill():.2f})")
             
-            print(f"\n{self.name} Playoff Results:")
+            print("\nTop 10 players:")
+            for i, (player, team) in enumerate(self.preseason_preview['top_players'], 1):
+                print(f"{i}. {player} - {team.name}")
+        else:
+            print("No preseason preview available.")
+
+    def display_regular_season_results(self):
+        if self.season:
+            self.season.print_standings()
+        else:
+            print("No regular season results available.")
+
+    def display_playoff_results(self):
+        if self.playoff_results:
+            print("Playoff Results:")
             for i, team in enumerate(self.playoff_results[:4], 1):
                 print(f"{i}. {team.name}")
         else:
-            print(f"Error: Regular season hasn't been played yet for {self.name}.")
+            print("No playoff results available.")
+
+    def get_playoff_results(self):
+        return self.playoff_results
 
     def get_top_teams(self, count):
         if self.season:
@@ -61,6 +100,3 @@ class League:
         else:
             print(f"Error: Season hasn't been played yet for {self.name}.")
             return []
-
-    def get_playoff_results(self):
-        return self.playoff_results
