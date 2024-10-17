@@ -78,12 +78,12 @@ class GameManager:
         if current_index < len(self.phases) - 1:
             self.current_phase = self.phases[current_index + 1]
             print(f"\nAdvancing to {self.current_phase}")
-            self.simulate_current_phase()  # Simulate the new phase immediately
+            self.simulate_current_phase()
         else:
             self.current_year += 1
             self.current_phase = self.phases[0]
             print(f"\nAdvancing to Year {self.current_year}")
-            self.simulate_current_phase()  # Simulate the new year's first phase
+            self.simulate_current_phase()
         input("Press Enter to continue...")
 
     def run_world_championship(self):

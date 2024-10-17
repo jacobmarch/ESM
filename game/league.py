@@ -13,28 +13,19 @@ class League:
         self.playoff_results = None
         self.off_season_results = None
         self.preseason_preview = None
+        self.playoff_tournament = None
 
     def run_off_season(self):
-        print(f"Running off-season for {self.name}")
         self.off_season_results = []
         for team in self.teams:
             team_changes = team.manage_roster()
             self.off_season_results.append((team.name, team_changes))
 
     def generate_preseason_preview(self):
-        # Sort teams by average player skill
         sorted_teams = sorted(self.teams, key=lambda t: t.get_average_skill(), reverse=True)
-        
-        # Get top 5 teams
         top_teams = sorted_teams[:5]
-        
-        # Get all players from all teams
         all_players = [(player, team) for team in self.teams for player in team.players]
-        
-        # Sort players by skill
         sorted_players = sorted(all_players, key=lambda x: x[0].skill, reverse=True)
-        
-        # Get top 10 players
         top_players = sorted_players[:10]
 
         self.preseason_preview = {
@@ -48,11 +39,10 @@ class League:
 
     def run_playoffs(self):
         if self.season:
-            print(f"\n{self.name} Playoffs:")
             top_teams = self.season.get_top_teams(8)  # Get top 8 teams for playoffs
-            tournament = DoubleEliminationTournament(top_teams)
-            tournament.run()
-            self.playoff_results = tournament.get_standings()
+            self.playoff_tournament = DoubleEliminationTournament(top_teams)
+            self.playoff_tournament.run(silent=True)
+            self.playoff_results = self.playoff_tournament.get_standings()
         else:
             print(f"Error: Regular season hasn't been played yet for {self.name}.")
 
@@ -84,10 +74,8 @@ class League:
             print("No regular season results available.")
 
     def display_playoff_results(self):
-        if self.playoff_results:
-            print("Playoff Results:")
-            for i, team in enumerate(self.playoff_results[:4], 1):
-                print(f"{i}. {team.name}")
+        if self.playoff_tournament:
+            self.playoff_tournament.display_results()
         else:
             print("No playoff results available.")
 

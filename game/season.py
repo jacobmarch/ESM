@@ -9,7 +9,6 @@ class Season:
         self.standings = {team: 0 for team in teams}
 
     def run_regular_season(self):
-        print("Running regular season")
         for home_team in self.teams:
             for away_team in self.teams:
                 if home_team != away_team:
@@ -17,8 +16,6 @@ class Season:
                     result = match.play()
                     self.update_standings(result)
                     self.matches.append(match)
-                    print(f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
-        self.print_standings()
 
     def update_standings(self, result):
         self.standings[result['winner']] += 3
