@@ -8,6 +8,11 @@ def main():
     input("Press Enter to start the game...")
 
     game_manager = GameManager()
+    
+    # Simulate the first off-season before starting the main game loop
+    game_manager.simulate_initial_off_season()
+    input("Press Enter to continue...")
+
     game_manager.start_game()
 
 if __name__ == "__main__":

@@ -103,3 +103,9 @@ class GameManager:
         else:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
         input("Press Enter to continue...")
+
+    def simulate_initial_off_season(self):
+        print(f"Simulating initial {self.current_phase} for year {self.current_year}...")
+        for league in self.leagues:
+            league.run_off_season()
+        print(f"Initial {self.current_phase} simulation complete.")
