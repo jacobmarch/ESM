@@ -126,10 +126,18 @@ class WorldChampionship:
         print("\n" + "="*50)
         print("KNOCKOUT STAGE")
         print("="*50)
+        
         knockout_matches = [match for match in self.match_results if not match[0].startswith("Group")]
-        for round_name, result in knockout_matches:
-            print(f"\n{round_name}:")
-            self.print_match_result(result)
+        
+        rounds = self.organize_matches_into_rounds(knockout_matches)
+        
+        for round_num, matches in enumerate(rounds, 1):
+            print(f"\nRound {round_num}:")
+            print("-"*25)
+            for round_name, result in matches:
+                print(f"{round_name}:")
+                self.print_match_result(result)
+            print("-"*25)
         
         print("\n" + "="*50)
         print("FINAL STANDINGS")
@@ -141,6 +149,27 @@ class WorldChampionship:
         print("\n" + "*"*50)
         print(f"The World Champion is: {champion.name}".center(50))
         print("*"*50)
+
+    def organize_matches_into_rounds(self, matches):
+        rounds = []
+        round_sizes = [4, 4, 2, 2, 1, 1]
+        current_round = []
+        round_index = 0
+
+        for match in matches:
+            current_round.append(match)
+            if len(current_round) == round_sizes[round_index]:
+                rounds.append(current_round)
+                current_round = []
+                round_index += 1
+                if round_index >= len(round_sizes):
+                    break
+
+        # Add any remaining matches as a final round
+        if current_round:
+            rounds.append(current_round)
+
+        return rounds
 
     def print_match_result(self, result):
         print(f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")

@@ -98,10 +98,38 @@ class DoubleEliminationTournament:
 
     def display_results(self):
         print("\nPlayoff Results:")
-        for round_name, result in self.match_results:
-            print(f"\n{round_name}:")
-            self.print_match_result(result)
+        
+        rounds = self.organize_matches_into_rounds()
+        
+        for round_num, matches in enumerate(rounds, 1):
+            print(f"\nRound {round_num}:")
+            print("-"*25)
+            for round_name, result in matches:
+                print(f"{round_name}:")
+                self.print_match_result(result)
+            print("-"*25)
         
         print("\nFinal Standings:")
         for i, team in enumerate(self.results[:4], 1):
             print(f"{i}. {team.name}")
+
+    def organize_matches_into_rounds(self):
+        rounds = []
+        round_sizes = [4, 4, 2, 2, 1, 1]
+        current_round = []
+        round_index = 0
+
+        for match in self.match_results:
+            current_round.append(match)
+            if len(current_round) == round_sizes[round_index]:
+                rounds.append(current_round)
+                current_round = []
+                round_index += 1
+                if round_index >= len(round_sizes):
+                    break
+
+        # Add any remaining matches as a final round
+        if current_round:
+            rounds.append(current_round)
+
+        return rounds
