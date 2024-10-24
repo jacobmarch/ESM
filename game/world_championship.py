@@ -25,7 +25,7 @@ class WorldChampionship:
         # Knockout Stage
         knockout_teams = self.create_knockout_matchups(self.group_winners)
         tournament = DoubleEliminationTournament(knockout_teams)
-        tournament.run(silent=True)
+        tournament.run(silent=False)  # Set silent to False to match regional playoffs
         final_standings = tournament.get_standings()
         
         # Combine group stage and knockout stage results
