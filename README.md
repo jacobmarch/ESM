@@ -8,42 +8,52 @@ This is an Esports Manager Game simulation where you guide multiple leagues thro
 ### main.py
 The entry point of the application.
 - Initializes the game and starts the main loop.
+- Simulates the initial off-season before starting the main game loop.
 
 ### game/manager.py
 Manages the overall game flow.
 - `GameManager` class: Handles the yearly cycle of off-season, preseason, regular season, playoffs, and World Championship.
+- Manages the transition between different phases of the game and simulates each phase.
 
 ### game/league.py
 Represents a regional league.
 - `League` class: Manages teams, runs seasons, and conducts playoffs for each region.
+- Includes methods for displaying results and previews for different phases.
 
 ### game/season.py
 Handles the regular season and playoffs for a league.
 - `Season` class: Runs matches, updates standings, and determines top teams.
+- Includes methods for running playoffs and printing standings.
 
 ### game/world_championship.py
 Manages the World Championship tournament.
 - `WorldChampionship` class: Creates balanced groups, runs group stages, and conducts knockout rounds.
+- Displays results and final standings of the championship.
 
 ### game/tournament.py
 Implements a double elimination tournament system.
 - `DoubleEliminationTournament` class: Runs upper and lower bracket matches.
+- Manages the progression of teams through the tournament and displays results.
 
 ### game/match.py
 Simulates individual matches between teams.
 - `Match` class: Determines match outcomes based on team skills.
+- Simulates rounds and encounters within a match.
 
 ### game/team.py
 Represents an esports team.
 - `Team` class: Manages players and calculates team skill.
+- Handles roster management and calculates average team skill.
 
 ### game/player.py
 Represents individual players.
 - `Player` class: Handles player attributes, skills, and contracts.
+- Generates random player names and skills, and manages contract details.
 
 ### game/utils.py
 Contains utility functions for the game.
 - Functions for loading data, generating random names, and other helper methods.
+- Includes functions for loading team names and generating random player and team names.
 
 ### game/data/
 Contains text files with data for the game.
@@ -94,4 +104,3 @@ Contains text files with data for the game.
 - `team_names.txt`: Contains team names for 4 regions (Americas, Europe, China, Pacific).
 
 This README provides a comprehensive overview of the project structure, file purposes, and key components. It should help both AI assistants and humans quickly understand the project layout and access the relevant parts of the code for modifications or enhancements.
-
