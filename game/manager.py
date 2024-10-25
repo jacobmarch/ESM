@@ -84,7 +84,7 @@ class GameManager:
             self.current_phase = self.phases[0]
             print(f"\nAdvancing to Year {self.current_year}")
             self.simulate_current_phase()
-        input("Press Enter to continue...")
+        # Removed: input("Press Enter to continue...")
 
     def run_world_championship(self):
         print(f"Running World Championship for year {self.current_year}")
