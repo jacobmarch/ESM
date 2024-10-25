@@ -9,13 +9,25 @@ class Season:
         self.standings = {team: 0 for team in teams}
 
     def run_regular_season(self):
-        for home_team in self.teams:
-            for away_team in self.teams:
-                if home_team != away_team:
-                    match = Match(home_team, away_team)
-                    result = match.play()
-                    self.update_standings(result)
-                    self.matches.append(match)
+        # Create a list of all possible matchups
+        matchups = []
+        for i, team1 in enumerate(self.teams):
+            for team2 in self.teams[i+1:]:  # Only match with teams not yet played
+                # Randomly determine home/away
+                if random.random() < 0.5:
+                    matchups.append((team1, team2))
+                else:
+                    matchups.append((team2, team1))
+        
+        # Shuffle the matchups for variety
+        random.shuffle(matchups)
+        
+        # Play all matches
+        for home_team, away_team in matchups:
+            match = Match(home_team, away_team)
+            result = match.play()
+            self.update_standings(result)
+            self.matches.append(match)
 
     def update_standings(self, result):
         self.standings[result['winner']] += 3
