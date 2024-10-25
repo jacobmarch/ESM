@@ -172,4 +172,6 @@ class WorldChampionship:
         return rounds
 
     def print_match_result(self, result):
-        print(f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}")
+        home_team = result['home_team']
+        away_team = result['away_team']
+        print(f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")

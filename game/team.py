@@ -50,3 +50,7 @@ class Team:
 
     def __repr__(self):
         return self.__str__()
+
+    @property
+    def rating(self):
+        return self.get_average_skill()
