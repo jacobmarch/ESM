@@ -21,17 +21,50 @@ class League:
             team_changes = team.manage_roster()
             self.off_season_results.append((team.name, team_changes))
 
-    def generate_preseason_preview(self):
-        sorted_teams = sorted(self.teams, key=lambda t: t.get_average_skill(), reverse=True)
-        top_teams = sorted_teams[:5]
-        all_players = [(player, team) for team in self.teams for player in team.players]
-        sorted_players = sorted(all_players, key=lambda x: x[0].skill, reverse=True)
-        top_players = sorted_players[:10]
+    def run_season_end(self):
+        """Called at the end of each season"""
+        # Store current ratings for next season comparison
+        for team in self.teams:
+            team.store_previous_rating()
 
-        self.preseason_preview = {
-            'top_teams': top_teams,
-            'top_players': top_players
-        }
+    def generate_preseason_preview(self):
+        """Generate a preview of teams for the upcoming season"""
+        # Sort teams by current skill
+        sorted_teams = sorted(self.teams, key=lambda x: x.get_average_skill(), reverse=True)
+        
+        preview = f"\nPreseason Preview - {self.name}\n"
+        preview += "=" * 50 + "\n"
+        
+        # Team Rankings
+        preview += "Team Rankings:\n"
+        preview += "-" * 40 + "\n"
+        for i, team in enumerate(sorted_teams, 1):
+            current_rating = round(team.get_average_skill(), 1)
+            rating_change = team.get_rating_change()
+            
+            # Format the rating change if available
+            change_str = ""
+            if rating_change is not None:
+                sign = "+" if rating_change > 0 else ""
+                change_str = f" ({sign}{rating_change})"
+            
+            preview += f"{i}. {team.name:<20} Rating: {current_rating}{change_str}\n"
+        
+        # Top Players
+        preview += "\nTop Players:\n"
+        preview += "-" * 40 + "\n"
+        
+        # Get all players from all teams with their team info
+        all_players = [(player, team) for team in self.teams for player in team.players]
+        # Sort by skill
+        top_players = sorted(all_players, key=lambda x: x[0].skill, reverse=True)[:10]
+        
+        for i, (player, team) in enumerate(top_players, 1):
+            # Use the player's gamer tag instead of name
+            preview += f"{i}. {player.gamer_tag:<20} ({team.name}) - Skill: {player.skill:.1f}\n"
+        
+        self.preseason_preview = preview
+        return preview
 
     def run_regular_season(self):
         self.season = Season(self.teams)
@@ -57,15 +90,11 @@ class League:
 
     def display_preseason_preview(self):
         if self.preseason_preview:
-            print("Top 5 teams:")
-            for i, team in enumerate(self.preseason_preview['top_teams'], 1):
-                print(f"{i}. {team.name} (Avg. Skill: {team.get_average_skill():.2f})")
-            
-            print("\nTop 10 players:")
-            for i, (player, team) in enumerate(self.preseason_preview['top_players'], 1):
-                print(f"{i}. {player} - {team.name}")
+            print(self.preseason_preview)  # Simply print the formatted string
         else:
-            print("No preseason preview available.")
+            # Generate preview if it hasn't been generated yet
+            preview = self.generate_preseason_preview()
+            print(preview)
 
     def display_regular_season_results(self):
         if self.season:

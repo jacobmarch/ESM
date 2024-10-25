@@ -47,7 +47,7 @@ class GameManager:
                 league.run_off_season()
         elif self.current_phase == "Preseason":
             for league in self.leagues:
-                league.generate_preseason_preview()
+                league.preseason_preview = league.generate_preseason_preview()  # Store the generated preview
         elif self.current_phase == "Regular Season":
             for league in self.leagues:
                 league.run_regular_season()
@@ -104,8 +104,16 @@ class GameManager:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
         input("Press Enter to continue...")
 
+        # After world championship ends, store ratings for next season
+        self.run_season_end()
+
     def simulate_initial_off_season(self):
         print(f"Simulating initial {self.current_phase} for year {self.current_year}...")
         for league in self.leagues:
             league.run_off_season()
         print(f"Initial {self.current_phase} simulation complete.")
+
+    def run_season_end(self):
+        """Called at the end of each season"""
+        for league in self.leagues:
+            league.run_season_end()

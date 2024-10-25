@@ -25,7 +25,7 @@ class WorldChampionship:
         # Knockout Stage
         knockout_teams = self.create_knockout_matchups(self.group_winners)
         tournament = DoubleEliminationTournament(knockout_teams)
-        tournament.run(silent=True)  # Set silent to True to prevent duplicate output
+        tournament.run(silent=False)  # Set silent to False to match regional playoffs
         final_standings = tournament.get_standings()
         
         # Combine group stage and knockout stage results
@@ -122,11 +122,13 @@ class WorldChampionship:
         return matchups
 
     def display_results(self, final_standings):
+        # Knockout Stage
         print("\n" + "="*50)
         print("KNOCKOUT STAGE")
         print("="*50)
         
         knockout_matches = [match for match in self.match_results if not match[0].startswith("Group")]
+        
         rounds = self.organize_matches_into_rounds(knockout_matches)
         
         for round_num, matches in enumerate(rounds, 1):
