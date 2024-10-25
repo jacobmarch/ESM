@@ -22,10 +22,10 @@ class WorldChampionship:
             print("Error: No group winners determined. Ending World Championship.")
             return
 
-        # Knockout Stage
+        # Knockout Stage - Set silent=True to prevent duplicate output
         knockout_teams = self.create_knockout_matchups(self.group_winners)
         tournament = DoubleEliminationTournament(knockout_teams)
-        tournament.run(silent=False)  # Set silent to False to match regional playoffs
+        tournament.run(silent=True)  # Changed from False to True
         final_standings = tournament.get_standings()
         
         # Combine group stage and knockout stage results
