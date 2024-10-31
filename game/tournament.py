@@ -115,13 +115,17 @@ class DoubleEliminationTournament:
         for i, team in enumerate(self.results[:4], 1):
             print(f"{i}. {team.name}")
 
-    def organize_matches_into_rounds(self):
+    def organize_matches_into_rounds(self, matches=None):
+        """Organize matches into rounds. If matches is not provided, use self.match_results"""
+        if matches is None:
+            matches = self.match_results
+            
         rounds = []
         round_sizes = [4, 4, 2, 2, 1, 1]
         current_round = []
         round_index = 0
 
-        for match in self.match_results:
+        for match in matches:
             current_round.append(match)
             if len(current_round) == round_sizes[round_index]:
                 rounds.append(current_round)
@@ -141,8 +145,21 @@ class DoubleEliminationTournament:
         text = "Tournament Results:\n"
         text += "-" * 40 + "\n"
         
+        # Show all matches by round
+        rounds = self.organize_matches_into_rounds(self.match_results)
+        for round_num, matches in enumerate(rounds, 1):
+            text += f"\nRound {round_num}:\n"
+            text += "-" * 25 + "\n"
+            for round_name, result in matches:
+                text += f"{round_name}:\n"
+                text += f"  ({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
+                text += f"{result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
+        
+        # Show final standings
+        text += "\nFinal Standings:\n"
+        text += "-" * 40 + "\n"
         standings = self.get_standings()
         for i, team in enumerate(standings, 1):
-            text += f"{i}. {team.name}\n"
+            text += f"{i}. {team.name} (Rating: {team.rating:.1f})\n"
         
         return text

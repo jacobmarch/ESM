@@ -43,14 +43,15 @@ class Season:
         text += "-" * 40 + "\n"
         
         for i, (team, points) in enumerate(standings, 1):
-            text += f"{i}. {team.name:<20} Points: {points}\n"
+            text += f"{i}. {team.name:<20} Points: {points} (Rating: {team.rating:.1f})\n"
         
-        # Add match results
+        # Add match results with team ratings
         text += "\nMatch Results:\n"
         text += "-" * 40 + "\n"
         for match in self.matches:
             result = match.play()
-            text += f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+            text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
+            text += f"{result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
         
         return text
 
