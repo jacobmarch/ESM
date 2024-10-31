@@ -7,8 +7,12 @@ class Match:
         self.home_team = home_team
         self.away_team = away_team
         self.best_of = best_of
+        self.result = None  # Store the result
 
     def play(self):
+        if self.result:  # Return cached result if available
+            return self.result
+            
         home_wins = 0
         away_wins = 0
         games_to_win = (self.best_of // 2) + 1
@@ -26,7 +30,7 @@ class Match:
         winner = self.home_team if home_wins > away_wins else self.away_team
         loser = self.away_team if home_wins > away_wins else self.home_team
 
-        return {
+        self.result = {
             'home_team': self.home_team,
             'away_team': self.away_team,
             'home_score': home_wins,
@@ -35,6 +39,7 @@ class Match:
             'loser': loser,
             'games': games_played
         }
+        return self.result
 
     def simulate_game(self):
         home_score = 0

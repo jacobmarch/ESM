@@ -4,15 +4,16 @@ from .world_championship import WorldChampionship
 
 class GameManager:
     def __init__(self):
-        self.leagues = [
-            League("Americas"),
-            League("Europe"),
-            League("China"),
-            League("Pacific")
-        ]
         self.current_year = 2023
+        self.leagues = [
+            League("Americas", self.current_year),
+            League("Europe", self.current_year),
+            League("China", self.current_year),
+            League("Pacific", self.current_year)
+        ]
         self.current_phase = "Off-Season"
         self.phases = ["Off-Season", "Preseason", "Regular Season", "Playoffs", "World Championship"]
+        self.world_championship = None
 
     def start_game(self):
         while True:
@@ -81,6 +82,8 @@ class GameManager:
             self.simulate_current_phase()
         else:
             self.current_year += 1
+            for league in self.leagues:
+                league.update_year(self.current_year)
             self.current_phase = self.phases[0]
             print(f"\nAdvancing to Year {self.current_year}")
             self.simulate_current_phase()
@@ -92,20 +95,24 @@ class GameManager:
         for league in self.leagues:
             playoff_results = league.get_playoff_results()
             if playoff_results:
-                qualified_teams.extend(playoff_results[:4])  # Take only top 4 teams
+                qualified_teams.extend(playoff_results[:4])
             else:
                 print(f"Error: Playoffs haven't been run for {league.name}.")
                 return
 
-        if len(qualified_teams) == 16:  # Ensure we have exactly 16 teams
-            world_championship = WorldChampionship(qualified_teams)
-            world_championship.run()
+        if len(qualified_teams) == 16:
+            self.world_championship = WorldChampionship(qualified_teams)
+            self.world_championship.run()
+            
+            # Save World Championship results
+            results_text = f"World Championship Results {self.current_year}\n"
+            results_text += "=" * 50 + "\n"
+            results_text += self.world_championship.get_results_text()  # New method needed
+            
+            from .utils import save_results
+            save_results(self.current_year, "World_Championship", results_text)
         else:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
-        input("Press Enter to continue...")
-
-        # After world championship ends, store ratings for next season
-        self.run_season_end()
 
     def simulate_initial_off_season(self):
         print(f"Simulating initial {self.current_phase} for year {self.current_year}...")

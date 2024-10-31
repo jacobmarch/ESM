@@ -26,12 +26,12 @@ class WorldChampionship:
         knockout_teams = self.create_knockout_matchups(self.group_winners)
         tournament = DoubleEliminationTournament(knockout_teams)
         tournament.run(silent=True)  # Changed from False to True
-        final_standings = tournament.get_standings()
+        self.final_standings = tournament.get_standings()  # Store final standings
         
         # Combine group stage and knockout stage results
         self.match_results.extend(tournament.match_results)
         
-        self.display_results(final_standings)
+        self.display_results(self.final_standings)
 
     def create_balanced_groups(self):
         # Separate teams by region
@@ -175,3 +175,42 @@ class WorldChampionship:
         home_team = result['home_team']
         away_team = result['away_team']
         print(f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
+
+    def get_results_text(self):
+        """Return formatted tournament results text for storage"""
+        text = "Group Stage Results:\n"
+        text += "-" * 40 + "\n"
+        
+        # Group stage results
+        current_group = 1
+        for match_type, result in self.match_results:
+            if match_type.startswith("Group"):
+                if "Group " + str(current_group) in match_type and "Upper Bracket" in match_type:
+                    text += f"\nGroup {current_group}:\n"
+                    current_group += 1
+                text += f"{match_type}:\n"
+                text += f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+        
+        # Knockout stage results
+        text += "\nKnockout Stage Results:\n"
+        text += "-" * 40 + "\n"
+        
+        knockout_matches = [match for match in self.match_results if not match[0].startswith("Group")]
+        rounds = self.organize_matches_into_rounds(knockout_matches)
+        
+        for round_num, matches in enumerate(rounds, 1):
+            text += f"\nRound {round_num}:\n"
+            for round_name, result in matches:
+                text += f"{round_name}:\n"
+                text += f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+        
+        # Final standings
+        if hasattr(self, 'final_standings'):
+            text += "\nFinal Standings:\n"
+            text += "-" * 40 + "\n"
+            for i, team in enumerate(self.final_standings[:4], 1):
+                text += f"{i}. {team.name}\n"
+            
+            text += f"\nWorld Champion: {self.final_standings[0].name}\n"
+        
+        return text

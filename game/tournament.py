@@ -135,3 +135,14 @@ class DoubleEliminationTournament:
             rounds.append(current_round)
 
         return rounds
+
+    def get_results_text(self):
+        """Return formatted tournament results text for storage"""
+        text = "Tournament Results:\n"
+        text += "-" * 40 + "\n"
+        
+        standings = self.get_standings()
+        for i, team in enumerate(standings, 1):
+            text += f"{i}. {team.name}\n"
+        
+        return text
