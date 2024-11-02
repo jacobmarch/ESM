@@ -5,7 +5,7 @@ import os
 
 class GameManager:
     def __init__(self):
-        self.current_year = 2023
+        self.current_year = 2024
         self.leagues = [
             League("Americas", self.current_year),
             League("Europe", self.current_year),
@@ -113,15 +113,22 @@ class GameManager:
             from .utils import save_results
             save_results(self.current_year, "World_Championship", results_text)
             
-            # Display yearly summary
-            print("\nGenerating yearly summary...")
-            summary_path = os.path.join("previous_results", str(self.current_year), "yearly_summary.txt")
-            if os.path.exists(summary_path):
-                with open(summary_path, 'r', encoding='utf-8') as f:
-                    print("\nYEARLY SUMMARY")
-                    print("=" * 50)
-                    print(f.read())
-                    print("=" * 50)
+            # Ask user if they want to generate yearly summary
+            while True:
+                choice = input("\nWould you like to generate an AI-written yearly summary? (y/n): ").lower()
+                if choice in ['y', 'n']:
+                    break
+                print("Invalid input. Please enter 'y' or 'n'.")
+            
+            if choice == 'y':
+                print("\nGenerating yearly summary...")
+                summary_path = os.path.join("previous_results", str(self.current_year), "yearly_summary.txt")
+                if os.path.exists(summary_path):
+                    with open(summary_path, 'r', encoding='utf-8') as f:
+                        print("\nYEARLY SUMMARY")
+                        print("=" * 50)
+                        print(f.read())
+                        print("=" * 50)
         
         else:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")

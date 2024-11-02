@@ -1,14 +1,30 @@
 from .match import Match
 
 class DoubleEliminationTournament:
-    def __init__(self, teams):
+    def __init__(self, teams, seeded=True):
         self.teams = teams
-        self.upper_bracket = teams.copy()
+        self.upper_bracket = self._create_seeded_bracket(teams) if seeded else teams.copy()
         self.lower_bracket = []
         self.upper_bracket_losers = []
         self.results = []
         self.grand_finalist = None
         self.match_results = []
+
+    def _create_seeded_bracket(self, teams):
+        if len(teams) != 8:
+            return teams.copy()
+            
+        seeded_bracket = [
+            teams[0],  # 1st seed
+            teams[7],  # 8th seed
+            teams[3],  # 4th seed
+            teams[4],  # 5th seed
+            teams[2],  # 3rd seed
+            teams[5],  # 6th seed
+            teams[1],  # 2nd seed
+            teams[6]   # 7th seed
+        ]
+        return seeded_bracket
 
     def run(self, silent=False):
         round_count = 0
