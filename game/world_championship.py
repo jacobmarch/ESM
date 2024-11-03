@@ -181,39 +181,69 @@ class WorldChampionship:
 
     def get_results_text(self):
         """Return formatted tournament results text for storage"""
-        text = "Group Stage Results:\n"
-        text += "-" * 40 + "\n"
+        text = "=" * 50 + "\n"
+        text += "WORLD CHAMPIONSHIP".center(50) + "\n"
+        text += "=" * 50 + "\n\n"
         
         # Group stage results
+        text += "GROUP STAGE\n"
+        text += "-" * 50 + "\n"
+        
         current_group = 1
+        group_matches = []
         for match_type, result in self.match_results:
             if match_type.startswith("Group"):
                 if "Group " + str(current_group) in match_type and "Upper Bracket" in match_type:
                     text += f"\nGroup {current_group}:\n"
+                    text += "-" * 25 + "\n"
                     current_group += 1
+                
                 text += f"{match_type}:\n"
-                text += f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+                home_team = result['home_team']
+                away_team = result['away_team']
+                text += f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                
+                # Add group winners after the last match of each group
+                if "Decider Match" in match_type:
+                    # Find the first seed from the Winners' Match
+                    winners_match = next(m for m in self.match_results if m[0] == f"Group {current_group-1} Winners' Match")
+                    first_seed = winners_match[1]['winner']
+                    second_seed = result['winner']  # Winner of the Decider Match
+                    
+                    text += f"\nGroup {current_group-1} Winners:\n"
+                    text += f"1. {first_seed.name}\n"
+                    text += f"2. {second_seed.name}\n"
+                    text += "-" * 25 + "\n"
         
         # Knockout stage results
-        text += "\nKnockout Stage Results:\n"
-        text += "-" * 40 + "\n"
+        text += "\n" + "=" * 50 + "\n"
+        text += "KNOCKOUT STAGE\n"
+        text += "=" * 50 + "\n"
         
         knockout_matches = [match for match in self.match_results if not match[0].startswith("Group")]
         rounds = self.organize_matches_into_rounds(knockout_matches)
         
         for round_num, matches in enumerate(rounds, 1):
             text += f"\nRound {round_num}:\n"
+            text += "-" * 25 + "\n"
             for round_name, result in matches:
                 text += f"{round_name}:\n"
-                text += f"  {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+                home_team = result['home_team']
+                away_team = result['away_team']
+                text += f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+            text += "-" * 25 + "\n"
         
         # Final standings
         if hasattr(self, 'final_standings'):
-            text += "\nFinal Standings:\n"
-            text += "-" * 40 + "\n"
+            text += "\n" + "=" * 50 + "\n"
+            text += "FINAL STANDINGS\n"
+            text += "=" * 50 + "\n"
             for i, team in enumerate(self.final_standings[:4], 1):
                 text += f"{i}. {team.name}\n"
             
-            text += f"\nWorld Champion: {self.final_standings[0].name}\n"
+            champion = self.final_standings[0]
+            text += "\n" + "*" * 50 + "\n"
+            text += f"The World Champion is: {champion.name}".center(50) + "\n"
+            text += "*" * 50 + "\n"
         
         return text
