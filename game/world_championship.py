@@ -22,9 +22,9 @@ class WorldChampionship:
             print("Error: No group winners determined. Ending World Championship.")
             return
 
-        # Knockout Stage - Set seeded=False for World Championship format
+        # Knockout Stage - Set seeded=True for World Championship format
         knockout_teams = self.create_knockout_matchups(self.group_winners)
-        tournament = DoubleEliminationTournament(knockout_teams, seeded=False)
+        tournament = DoubleEliminationTournament(knockout_teams, seeded=True)
         tournament.run(silent=True)
         self.final_standings = tournament.get_standings()
         
@@ -101,23 +101,26 @@ class WorldChampionship:
             print("-"*25)
 
     def create_knockout_matchups(self, group_winners):
-        # Separate 1st and 2nd place teams
+        # Keep first place teams in order (they earned their seeds)
         first_place = group_winners[::2]
         second_place = group_winners[1::2]
 
-        # Shuffle second place teams
-        random.shuffle(second_place)
-
-        # Create matchups ensuring teams from the same group don't face each other
+        # Create standard bracket matchups:
+        # 1st A vs 2nd B
+        # 1st C vs 2nd D
+        # 1st B vs 2nd A
+        # 1st D vs 2nd C
         matchups = []
-        for i, team in enumerate(first_place):
-            # Find a second place team not from the same group
-            for opponent in second_place:
-                if opponent not in group_winners[i*2:(i+1)*2]:
-                    matchups.append(team)
-                    matchups.append(opponent)
-                    second_place.remove(opponent)
-                    break
+        pairs = [
+            (0, 1), # 1st from A vs 2nd from B
+            (2, 3), # 1st from C vs 2nd from D
+            (1, 0), # 1st from B vs 2nd from A
+            (3, 2)  # 1st from D vs 2nd from C
+        ]
+        
+        for first_idx, second_idx in pairs:
+            matchups.append(first_place[first_idx])
+            matchups.append(second_place[second_idx])
 
         return matchups
 

@@ -14,17 +14,9 @@ class DoubleEliminationTournament:
         if len(teams) != 8:
             return teams.copy()
             
-        seeded_bracket = [
-            teams[0],  # 1st seed
-            teams[7],  # 8th seed
-            teams[3],  # 4th seed
-            teams[4],  # 5th seed
-            teams[2],  # 3rd seed
-            teams[5],  # 6th seed
-            teams[1],  # 2nd seed
-            teams[6]   # 7th seed
-        ]
-        return seeded_bracket
+        # For World Championship, teams are already properly ordered
+        # by create_knockout_matchups, so just return them in order
+        return teams.copy()
 
     def run(self, silent=False):
         round_count = 0

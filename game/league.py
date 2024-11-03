@@ -57,7 +57,7 @@ class League:
             change_str = ""
             if rating_change is not None:
                 sign = "+" if rating_change > 0 else ""
-                change_str = f" ({sign}{rating_change})"
+                change_str = f" ({sign}{rating_change:.1f})"  # Using :+.1f to always show sign and 1 decimal
             
             preview += f"{i}. {team.name:<20} Rating: {current_rating}{change_str}\n"
         

@@ -82,6 +82,8 @@ class GameManager:
             print(f"\nAdvancing to {self.current_phase}")
             self.simulate_current_phase()
         else:
+            self.run_season_end()
+            
             self.current_year += 1
             for league in self.leagues:
                 league.update_year(self.current_year)
