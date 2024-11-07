@@ -1,7 +1,7 @@
 from .season import Season
 from .league import League
 from .world_championship import WorldChampionship
-import os
+from .utils import generate_yearly_summary
 
 class GameManager:
     def __init__(self):
@@ -124,13 +124,14 @@ class GameManager:
             
             if choice == 'y':
                 print("\nGenerating yearly summary...")
-                summary_path = os.path.join("previous_results", str(self.current_year), "yearly_summary.txt")
-                if os.path.exists(summary_path):
-                    with open(summary_path, 'r', encoding='utf-8') as f:
-                        print("\nYEARLY SUMMARY")
-                        print("=" * 50)
-                        print(f.read())
-                        print("=" * 50)
+                summary = generate_yearly_summary(self.current_year)
+                if summary:
+                    print("\nYEARLY SUMMARY")
+                    print("=" * 50)
+                    print(summary)
+                    print("=" * 50)
+                else:
+                    print("Error: Failed to generate yearly summary")
         
         else:
             print(f"Error: Incorrect number of qualified teams ({len(qualified_teams)}). Expected 16.")
