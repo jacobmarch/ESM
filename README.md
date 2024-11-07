@@ -1,106 +1,166 @@
 # Esports Manager Game
 
 ## Project Overview
-This is an Esports Manager Game simulation where you guide multiple leagues through seasons, playoffs, and a World Championship.
+This is an Esports Manager Game simulation that models a professional esports ecosystem with multiple regional leagues competing through seasons, playoffs, and ultimately a World Championship. The game simulates player development, team management, and competitive matches in a Valorant-style format.
 
-## File Structure and Descriptions
+## Detailed Component Breakdown
 
-### main.py
-The entry point of the application.
-- Initializes the game and starts the main loop.
-- Simulates the initial off-season before starting the main game loop.
+### Core Game Flow (main.py)
+Entry point that initializes and manages the game lifecycle:
+- Clears any previous simulation results
+- Creates a new GameManager instance
+- Simulates initial off-season to set up the first year
+- Starts the main game loop for continuous simulation
 
-### game/manager.py
-Manages the overall game flow.
-- `GameManager` class: Handles the yearly cycle of off-season, preseason, regular season, playoffs, and World Championship.
-- Manages the transition between different phases of the game and simulates each phase.
+### Game Management (game/manager.py)
+Central controller for the game's yearly cycle:
+- Manages 4 regional leagues: Americas, Europe, China, and Pacific
+- Progresses through 5 distinct phases:
+  1. Off-Season: Player transfers and contract management
+  2. Preseason: Team ratings and predictions
+  3. Regular Season: League matches
+  4. Playoffs: Regional championships
+  5. World Championship: Global tournament
+- Handles user interface and menu navigation
+- Coordinates between leagues for World Championship qualification
 
-### game/league.py
-Represents a regional league.
-- `League` class: Manages teams, runs seasons, and conducts playoffs for each region.
-- Includes methods for displaying results and previews for different phases.
+### League System (game/league.py)
+Manages individual regional competitions:
+- Maintains roster of 10 teams per region
+- Tracks team performance and standings
+- Key functionalities:
+  - Off-season roster management
+  - Preseason power rankings and player highlights
+  - Regular season match scheduling and results
+  - Playoff tournament organization
+  - Historical rating tracking for year-over-year comparison
+- Generates detailed reports for each phase
 
-### game/season.py
-Handles the regular season and playoffs for a league.
-- `Season` class: Runs matches, updates standings, and determines top teams.
-- Includes methods for running playoffs and printing standings.
+### Season Management (game/season.py)
+Handles regular season competition structure:
+- Implements round-robin match scheduling
+- Maintains league standings and points
+- Features:
+  - Match result processing
+  - Standing calculations
+  - Playoff qualification determination
+  - Detailed match history tracking
+- Provides formatted results for record-keeping
 
-### game/world_championship.py
-Manages the World Championship tournament.
-- `WorldChampionship` class: Creates balanced groups, runs group stages, and conducts knockout rounds.
-- Displays results and final standings of the championship.
+### World Championship (game/world_championship.py)
+Implements the global championship tournament:
+- Group Stage:
+  - Creates 4 balanced groups with regional distribution
+  - Double-elimination format within groups
+  - Top 2 teams from each group advance
+- Knockout Stage:
+  - Seeded bracket based on group performance
+  - Double-elimination format
+  - Best-of-5 finals
+- Comprehensive results tracking and formatting
 
-### game/tournament.py
-Implements a double elimination tournament system.
-- `DoubleEliminationTournament` class: Runs upper and lower bracket matches.
-- Manages the progression of teams through the tournament and displays results.
+### Tournament System (game/tournament.py)
+Implements double-elimination tournament logic:
+- Manages both upper and lower brackets
+- Handles:
+  - Match scheduling
+  - Bracket progression
+  - Loser bracket integration
+  - Final standings calculation
+- Supports different match formats (Best-of-3/Best-of-5)
+- Provides detailed round-by-round results
 
-### game/match.py
-Simulates individual matches between teams.
-- `Match` class: Determines match outcomes based on team skills.
-- Simulates rounds and encounters within a match.
+### Match System (game/match.py)
+Simulates individual matches between teams:
+- Implements Valorant-style match format:
+  - First to 13 rounds
+  - Overtime rules for 12-12 ties
+- Round simulation:
+  - 5v5 player encounters
+  - Skill-based outcome determination
+  - Detailed encounter tracking
+- Caches results for consistency
+- Provides comprehensive match statistics
 
-### game/team.py
-Represents an esports team.
-- `Team` class: Manages players and calculates team skill.
-- Handles roster management and calculates average team skill.
+### Team Management (game/team.py)
+Represents and manages individual teams:
+- Maintains 5-player rosters
+- Features:
+  - Team skill calculation
+  - Rating tracking between seasons
+  - Roster management
+  - Contract handling
+- Performance comparison tools
+- Rating change tracking
 
-### game/player.py
-Represents individual players.
-- `Player` class: Handles player attributes, skills, and contracts.
-- Generates random player names and skills, and manages contract details.
+### Player System (game/player.py)
+Models individual players:
+- Attributes:
+  - Real name (First and Last)
+  - Gamer tag
+  - Skill rating (50-100 scale)
+  - Contract details
+- Features:
+  - Skill generation using normal distribution
+  - Contract management
+  - Performance improvement system
+  - String representation for display
 
-### game/utils.py
-Contains utility functions for the game.
-- Functions for loading data, generating random names, and other helper methods.
-- Includes functions for loading team names and generating random player and team names.
+### Utility Functions (game/utils.py)
+Comprehensive utility toolkit:
+- Data Management:
+  - File loading and parsing
+  - Results storage and retrieval
+  - Directory management
+- Name Generation:
+  - Player names
+  - Gamer tags
+  - Team names
+- AI Integration:
+  - Yearly summary generation
+  - Article writing
+  - Context management
+- Result Processing:
+  - Data filtering
+  - Format conversion
+  - Text formatting
 
-### game/data/
-Contains text files with data for the game.
-- `first_names.txt`: List of first names for player generation.
-- `last_names.txt`: List of last names for player generation.
-- `gamer_tags.txt`: List of gamer tags for player generation.
-- `team_names.txt`: List of team names organized by region.
+### Data Files (game/data/)
+Contains all static data for the game:
+- `first_names.txt`: 2942 possible first names
+- `last_names.txt`: 158 possible last names
+- `gamer_tags.txt`: 210 unique gamer tags
+- `team_names.txt`: Regional team distribution:
+  - Americas: 10 teams
+  - Europe: 10 teams
+  - China: 10 teams
+  - Pacific: 10 teams
 
-## Key Components and Functions
+## Technical Details
 
-### GameManager (game/manager.py)
-- `start_game()`: Main game loop that progresses through each year.
-- `run_off_season()`, `run_preseason()`, `run_regular_season()`, `run_playoffs()`, `run_world_championship()`: Methods to handle different phases of the game.
+### Match Simulation
+- Uses skill-based probability system
+- Implements realistic overtime rules
+- Tracks detailed statistics
+- Caches results for consistency
 
-### League (game/league.py)
-- `run_off_season()`: Manages team rosters during the off-season.
-- `generate_preseason_preview()`: Creates a preview of top teams and players.
-- `run_regular_season()`: Conducts the regular season matches.
-- `run_playoffs()`: Runs the playoffs for the league.
+### Tournament Formats
+- Regular Season: Round-robin
+- Playoffs: Double-elimination
+- World Championship:
+  - Group Stage: Double-elimination groups
+  - Knockout Stage: Double-elimination bracket
 
-### Season (game/season.py)
-- `run_regular_season()`: Simulates all matches in the regular season.
-- `update_standings()`: Updates team standings after each match.
-- `get_top_teams()`: Returns the top teams based on standings.
+### Rating System
+- Player skills: Normal distribution (mean 75, std 10)
+- Team rating: Average of player skills
+- Match probability: Skill difference based
+- Rating tracking between seasons
 
-### WorldChampionship (game/world_championship.py)
-- `create_balanced_groups()`: Forms balanced groups for the tournament.
-- `run_group_stage()`: Conducts the group stage matches.
-- `create_knockout_matchups()`: Creates matchups for the knockout stage.
-- `run_knockout_stage()`: Runs the knockout stage of the tournament.
+### File Storage
+- Results stored in `previous_results` directory
+- Organized by year and competition
+- Maintains complete match histories
+- Supports AI summary generation
 
-### Match (game/match.py)
-- `play()`: Simulates a match between two teams and returns the result.
-
-### Team (game/team.py)
-- `manage_roster()`: Handles player contracts and roster changes.
-- `get_average_skill()`: Calculates the average skill of the team's players.
-
-### Player (game/player.py)
-- `improve()`: Increases the player's skill.
-- `decrease_contract_length()`: Reduces the remaining contract length.
-- `renew_contract()`: Renews the player's contract.
-
-## Data Files
-- `first_names.txt`: Contains 2942 first names.
-- `last_names.txt`: Contains 158 last names.
-- `gamer_tags.txt`: Contains 210 gamer tags.
-- `team_names.txt`: Contains team names for 4 regions (Americas, Europe, China, Pacific).
-
-This README provides a comprehensive overview of the project structure, file purposes, and key components. It should help both AI assistants and humans quickly understand the project layout and access the relevant parts of the code for modifications or enhancements.
+This README provides a comprehensive reference for understanding the game's architecture, components, and systems. Each section can be used as a quick reference for specific functionality or as a guide for modifications and enhancements.
