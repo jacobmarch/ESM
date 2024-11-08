@@ -24,7 +24,7 @@ class WorldChampionship:
 
         # Knockout Stage - Set seeded=True for World Championship format
         knockout_teams = self.create_knockout_matchups(self.group_winners)
-        tournament = DoubleEliminationTournament(knockout_teams, seeded=True)
+        tournament = DoubleEliminationTournament(knockout_teams, seeded=False)
         tournament.run(silent=True)
         self.final_standings = tournament.get_standings()
         

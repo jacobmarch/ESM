@@ -14,9 +14,19 @@ class DoubleEliminationTournament:
         if len(teams) != 8:
             return teams.copy()
             
-        # For World Championship, teams are already properly ordered
-        # by create_knockout_matchups, so just return them in order
-        return teams.copy()
+        # For regional playoffs, create 1v8, 4v5, 3v6, 2v7 matchups
+        seeded_order = [
+            teams[0],  # 1st seed
+            teams[7],  # 8th seed
+            teams[3],  # 4th seed
+            teams[4],  # 5th seed
+            teams[2],  # 3rd seed
+            teams[5],  # 6th seed
+            teams[1],  # 2nd seed
+            teams[6]   # 7th seed
+        ]
+        
+        return seeded_order
 
     def run(self, silent=False):
         round_count = 0
@@ -39,6 +49,7 @@ class DoubleEliminationTournament:
     def play_upper_bracket(self, silent):
         if len(self.upper_bracket) > 1:
             next_round = []
+            # Process matches in pairs (0-1, 2-3, 4-5, 6-7)
             for i in range(0, len(self.upper_bracket), 2):
                 if i + 1 < len(self.upper_bracket):
                     match = Match(self.upper_bracket[i], self.upper_bracket[i+1], best_of=3)
