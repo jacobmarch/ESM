@@ -177,7 +177,11 @@ class WorldChampionship:
     def print_match_result(self, result):
         home_team = result['home_team']
         away_team = result['away_team']
-        print(f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
+        print(f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
+        # Add map scores
+        for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+            print(f"     Map {game_num}: {home_map_score}-{away_map_score}")
+        print()  # Add blank line after each match
 
     def get_results_text(self):
         """Return formatted tournament results text for storage"""
@@ -190,7 +194,6 @@ class WorldChampionship:
         text += "-" * 50 + "\n"
         
         current_group = 1
-        group_matches = []
         for match_type, result in self.match_results:
             if match_type.startswith("Group"):
                 if "Group " + str(current_group) in match_type and "Upper Bracket" in match_type:
@@ -201,16 +204,19 @@ class WorldChampionship:
                 text += f"{match_type}:\n"
                 home_team = result['home_team']
                 away_team = result['away_team']
-                text += f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                # Add map scores
+                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                text += "\n"
                 
                 # Add group winners after the last match of each group
                 if "Decider Match" in match_type:
-                    # Find the first seed from the Winners' Match
                     winners_match = next(m for m in self.match_results if m[0] == f"Group {current_group-1} Winners' Match")
                     first_seed = winners_match[1]['winner']
-                    second_seed = result['winner']  # Winner of the Decider Match
+                    second_seed = result['winner']
                     
-                    text += f"\nGroup {current_group-1} Winners:\n"
+                    text += f"Group {current_group-1} Winners:\n"
                     text += f"1. {first_seed.name}\n"
                     text += f"2. {second_seed.name}\n"
                     text += "-" * 25 + "\n"
@@ -230,7 +236,11 @@ class WorldChampionship:
                 text += f"{round_name}:\n"
                 home_team = result['home_team']
                 away_team = result['away_team']
-                text += f"  ({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                # Add map scores
+                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                text += "\n"
             text += "-" * 25 + "\n"
         
         # Final standings

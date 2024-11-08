@@ -102,6 +102,10 @@ class DoubleEliminationTournament:
         home_team = result['home_team']
         away_team = result['away_team']
         print(f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
+        # Add map scores
+        for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+            print(f"     Map {game_num}: {home_map_score}-{away_map_score}")
+        print()  # Add blank line after each match
 
     def get_standings(self):
         return self.results
@@ -160,8 +164,12 @@ class DoubleEliminationTournament:
             text += "-" * 25 + "\n"
             for round_name, result in matches:
                 text += f"{round_name}:\n"
-                text += f"  ({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
+                text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
                 text += f"{result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
+                # Add map scores
+                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                text += "\n"
         
         # Show final standings
         text += "\nFinal Standings:\n"

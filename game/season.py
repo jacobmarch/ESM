@@ -171,12 +171,18 @@ class Season:
             stats = self.standings[team]
             text += f"{i}. {team.name:<20} {stats['wins']}-{stats['losses']} ({stats['map_wins']}-{stats['map_losses']})\n"
         
-        # Add match results
+        # Add match results with updated formatting
         text += "\nMatch Results:\n"
         text += "-" * 40 + "\n"
         for match in self.matches:
             result = match.play()
-            text += f"{result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name}\n"
+            # Add team ratings to the output
+            text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
+            
+            # Add individual map scores
+            for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
+                text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+            text += "\n"  # Add extra newline between matches
         
         return text
 
