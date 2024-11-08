@@ -59,20 +59,21 @@ class Season:
         return stats['map_wins'] - stats['map_losses']
 
     def get_round_differential(self, team):
-        total_round_diff = 0
+        """Calculate round differential for a team across all matches."""
+        total_rounds_won = 0
+        total_rounds_lost = 0
+        
         for match in self.matches:
             result = match.play()
-            if match.home_team == team:
-                for _, _, round_details in result['games']:
-                    home_rounds = sum(1 for rd in round_details if rd['winner'] == team)
-                    away_rounds = len(round_details) - home_rounds
-                    total_round_diff += home_rounds - away_rounds
-            elif match.away_team == team:
-                for _, _, round_details in result['games']:
-                    away_rounds = sum(1 for rd in round_details if rd['winner'] == team)
-                    home_rounds = len(round_details) - away_rounds
-                    total_round_diff += away_rounds - home_rounds
-        return total_round_diff
+            if result['home_team'] == team or result['away_team'] == team:
+                for game in result['games']:
+                    for round_info in game['rounds']:
+                        if round_info['winner'] == team:
+                            total_rounds_won += 1
+                        else:
+                            total_rounds_lost += 1
+
+        return total_rounds_won - total_rounds_lost
 
     def resolve_tiebreaker(self, tied_teams):
         if len(tied_teams) == 2:
@@ -176,13 +177,21 @@ class Season:
         text += "-" * 40 + "\n"
         for match in self.matches:
             result = match.play()
-            # Add team ratings to the output
             text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
             
+            # Add map sequence
+            text += "Map Sequence:\n"
+            for action, team, map_name in result['map_sequence']:
+                if action == 'decider':
+                    text += f"     Decider: {map_name}\n"
+                else:
+                    text += f"     {team.name} {action}: {map_name}\n"
+            
             # Add individual map scores
-            for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
-                text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
-            text += "\n"  # Add extra newline between matches
+            for game in result['games']:
+                home_score, away_score = game['score']
+                text += f"     {game['map']}: {home_score}-{away_score}\n"
+            text += "\n"
         
         return text
 

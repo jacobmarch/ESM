@@ -178,10 +178,20 @@ class WorldChampionship:
         home_team = result['home_team']
         away_team = result['away_team']
         print(f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
+        
+        # Add map sequence
+        print("Map Sequence:")
+        for action, team, map_name in result['map_sequence']:
+            if action == 'decider':
+                print(f"     Decider: {map_name}")
+            else:
+                print(f"     {team.name} {action}: {map_name}")
+        
         # Add map scores
-        for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
-            print(f"     Map {game_num}: {home_map_score}-{away_map_score}")
-        print()  # Add blank line after each match
+        for game in result['games']:
+            home_score, away_score = game['score']
+            print(f"     {game['map']}: {home_score}-{away_score}")
+        print()
 
     def get_results_text(self):
         """Return formatted tournament results text for storage"""
@@ -205,9 +215,18 @@ class WorldChampionship:
                 home_team = result['home_team']
                 away_team = result['away_team']
                 text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                # Add map sequence
+                text += "Map Sequence:\n"
+                for action, team, map_name in result['map_sequence']:
+                    if action == 'decider':
+                        text += f"     Decider: {map_name}\n"
+                    else:
+                        text += f"     {team.name} {action}: {map_name}\n"
+                
                 # Add map scores
-                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
-                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                for game in result['games']:
+                    home_score, away_score = game['score']
+                    text += f"     {game['map']}: {home_score}-{away_score}\n"
                 text += "\n"
                 
                 # Add group winners after the last match of each group
@@ -237,9 +256,18 @@ class WorldChampionship:
                 home_team = result['home_team']
                 away_team = result['away_team']
                 text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
+                # Add map sequence
+                text += "Map Sequence:\n"
+                for action, team, map_name in result['map_sequence']:
+                    if action == 'decider':
+                        text += f"     Decider: {map_name}\n"
+                    else:
+                        text += f"     {team.name} {action}: {map_name}\n"
+                
                 # Add map scores
-                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
-                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                for game in result['games']:
+                    home_score, away_score = game['score']
+                    text += f"     {game['map']}: {home_score}-{away_score}\n"
                 text += "\n"
             text += "-" * 25 + "\n"
         
