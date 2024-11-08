@@ -85,7 +85,13 @@ class DoubleEliminationTournament:
         next_round = []
         for i in range(min(len(self.lower_bracket), len(self.upper_bracket_losers))):
             best_of = 5 if len(self.lower_bracket) == 1 and len(self.upper_bracket_losers) == 1 else 3
-            match = Match(self.lower_bracket[i], self.upper_bracket_losers[i], best_of=best_of)
+            # Create match with upper_loser parameter
+            match = Match(
+                self.lower_bracket[i], 
+                self.upper_bracket_losers[i], 
+                best_of=best_of,
+                upper_loser=self.upper_bracket_losers[i]  # Pass the upper bracket loser
+            )
             result = match.play()
             self.match_results.append(("Lower Bracket with Upper Losers", result))
             if not silent:
