@@ -187,9 +187,18 @@ class DoubleEliminationTournament:
                 text += f"{round_name}:\n"
                 text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
                 text += f"{result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
-                # Add map scores
-                for game_num, (home_map_score, away_map_score, _) in enumerate(result['games'], 1):
-                    text += f"     Map {game_num}: {home_map_score}-{away_map_score}\n"
+                
+                # Add map sequence
+                text += "Map Sequence:\n"
+                for action, team, map_name in result['map_sequence']:
+                    if action == 'decider':
+                        text += f"     Decider: {map_name}\n"
+                    else:
+                        text += f"     {team.name} {action}: {map_name}\n"
+                
+                # Add map scores using the new format
+                for game in result['games']:
+                    text += f"     {game['map']}: {game['score'][0]}-{game['score'][1]}\n"
                 text += "\n"
         
         # Show final standings
