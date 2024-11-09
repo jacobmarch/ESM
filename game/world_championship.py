@@ -179,13 +179,24 @@ class WorldChampionship:
         away_team = result['away_team']
         print(f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})")
         
-        # Add map sequence
+        # Calculate map scores
+        temp_match = Match(home_team, away_team)
+        home_map_scores = temp_match._calculate_map_scores(home_team, away_team)
+        away_map_scores = temp_match._calculate_map_scores(away_team, home_team)
+        
+        # Add map sequence with scores
         print("Map Sequence:")
         for action, team, map_name in result['map_sequence']:
             if action == 'decider':
-                print(f"     Decider: {map_name}")
+                home_score = home_map_scores[map_name]
+                away_score = away_map_scores[map_name]
+                print(f"     Decider: {map_name} (H:{home_score:+d}/A:{away_score:+d})")
             else:
-                print(f"     {team.name} {action}: {map_name}")
+                if team == home_team:
+                    score = home_map_scores[map_name]
+                else:
+                    score = away_map_scores[map_name]
+                print(f"     {team.name} {action}: {map_name} ({score:+d})")
         
         # Add map scores
         for game in result['games']:

@@ -190,19 +190,31 @@ class DoubleEliminationTournament:
             text += f"\nRound {round_num}:\n"
             text += "-" * 25 + "\n"
             for round_name, result in matches:
+                # Create a temporary match object to calculate map scores
+                temp_match = Match(result['home_team'], result['away_team'], 
+                                 best_of=3 if result['home_score'] + result['away_score'] <= 3 else 5)
+                home_map_scores = temp_match._calculate_map_scores(result['home_team'], result['away_team'])
+                away_map_scores = temp_match._calculate_map_scores(result['away_team'], result['home_team'])
+                
                 text += f"{round_name}:\n"
                 text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - "
                 text += f"{result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
                 
-                # Add map sequence
+                # Add map sequence with scores
                 text += "Map Sequence:\n"
                 for action, team, map_name in result['map_sequence']:
                     if action == 'decider':
-                        text += f"     Decider: {map_name}\n"
+                        home_score = home_map_scores[map_name]
+                        away_score = away_map_scores[map_name]
+                        text += f"     Decider: {map_name} (H:{home_score:+d}/A:{away_score:+d})\n"
                     else:
-                        text += f"     {team.name} {action}: {map_name}\n"
+                        if team == result['home_team']:
+                            score = home_map_scores[map_name]
+                        else:
+                            score = away_map_scores[map_name]
+                        text += f"     {team.name} {action}: {map_name} ({score:+d})\n"
                 
-                # Add map scores using the new format
+                # Add map scores
                 for game in result['games']:
                     text += f"     {game['map']}: {game['score'][0]}-{game['score'][1]}\n"
                 text += "\n"
