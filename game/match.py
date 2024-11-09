@@ -11,39 +11,75 @@ class Match:
         self.available_maps = Player.MAPS.copy()  # Use maps from Player class
         self.upper_loser = upper_loser  # Track which team came from upper bracket
 
+    def _calculate_map_scores(self, team: Team, opponent: Team) -> dict:
+        """Calculate strategic scores for each map based on team strengths/weaknesses."""
+        map_scores = {map_name: 0 for map_name in self.available_maps}
+        
+        # Evaluate own team's strengths/weaknesses
+        for player in team.players:
+            for map_name in self.available_maps:
+                modifier = player.get_map_skill_modifier(map_name)
+                if modifier > 0:
+                    map_scores[map_name] += 2
+                elif modifier < 0:
+                    map_scores[map_name] -= 2
+        
+        # Evaluate opponent's strengths/weaknesses
+        for player in opponent.players:
+            for map_name in self.available_maps:
+                modifier = player.get_map_skill_modifier(map_name)
+                if modifier > 0:
+                    map_scores[map_name] -= 1
+                elif modifier < 0:
+                    map_scores[map_name] += 1
+                    
+        return map_scores
+
+    def _get_best_map(self, available_maps: list, map_scores: dict) -> str:
+        """Return the map with the highest score from available maps."""
+        return max(available_maps, key=lambda m: map_scores[m])
+
+    def _get_worst_map(self, available_maps: list, map_scores: dict) -> str:
+        """Return the map with the lowest score from available maps."""
+        return min(available_maps, key=lambda m: map_scores[m])
+
     def _pick_ban_maps(self):
         """Handle map pick/ban phase based on match format."""
         available_maps = self.available_maps.copy()
         map_sequence = []
+        
+        # Calculate map scores for both teams
+        home_map_scores = self._calculate_map_scores(self.home_team, self.away_team)
+        away_map_scores = self._calculate_map_scores(self.away_team, self.home_team)
 
         if self.best_of == 3:
-            # Team A Ban
-            map1 = random.choice(available_maps)
+            # Team A Ban (worst enemy map)
+            map1 = self._get_worst_map(available_maps, home_map_scores)
             available_maps.remove(map1)
             map_sequence.append(('ban', self.home_team, map1))
 
-            # Team B Ban
-            map2 = random.choice(available_maps)
+            # Team B Ban (worst enemy map)
+            map2 = self._get_worst_map(available_maps, away_map_scores)
             available_maps.remove(map2)
             map_sequence.append(('ban', self.away_team, map2))
 
-            # Team A Pick Map 1
-            map3 = random.choice(available_maps)
+            # Team A Pick (best remaining map)
+            map3 = self._get_best_map(available_maps, home_map_scores)
             available_maps.remove(map3)
             map_sequence.append(('pick', self.home_team, map3))
 
-            # Team B Pick Map 2
-            map4 = random.choice(available_maps)
+            # Team B Pick (best remaining map)
+            map4 = self._get_best_map(available_maps, away_map_scores)
             available_maps.remove(map4)
             map_sequence.append(('pick', self.away_team, map4))
 
             # Team A Ban
-            map5 = random.choice(available_maps)
+            map5 = self._get_worst_map(available_maps, home_map_scores)
             available_maps.remove(map5)
             map_sequence.append(('ban', self.home_team, map5))
 
             # Team B Ban
-            map6 = random.choice(available_maps)
+            map6 = self._get_worst_map(available_maps, away_map_scores)
             available_maps.remove(map6)
             map_sequence.append(('ban', self.away_team, map6))
 
@@ -54,36 +90,38 @@ class Match:
             return [map3, map4, map7], map_sequence
 
         else:  # best_of == 5
-            # Determine which team gets the double ban advantage
             upper_loser_team = self.upper_loser if self.upper_loser else self.home_team
             other_team = self.away_team if upper_loser_team == self.home_team else self.home_team
+            
+            upper_loser_scores = home_map_scores if upper_loser_team == self.home_team else away_map_scores
+            other_team_scores = away_map_scores if upper_loser_team == self.home_team else home_map_scores
 
-            # Upper bracket loser (or home team) bans
-            map1 = random.choice(available_maps)
+            # Upper bracket loser bans twice
+            map1 = self._get_worst_map(available_maps, upper_loser_scores)
             available_maps.remove(map1)
             map_sequence.append(('ban', upper_loser_team, map1))
 
-            map2 = random.choice(available_maps)
+            map2 = self._get_worst_map(available_maps, upper_loser_scores)
             available_maps.remove(map2)
             map_sequence.append(('ban', upper_loser_team, map2))
 
             # Upper bracket loser picks Map 1
-            map3 = random.choice(available_maps)
+            map3 = self._get_best_map(available_maps, upper_loser_scores)
             available_maps.remove(map3)
             map_sequence.append(('pick', upper_loser_team, map3))
 
             # Other team picks Map 2
-            map4 = random.choice(available_maps)
+            map4 = self._get_best_map(available_maps, other_team_scores)
             available_maps.remove(map4)
             map_sequence.append(('pick', other_team, map4))
 
             # Upper bracket loser picks Map 3
-            map5 = random.choice(available_maps)
+            map5 = self._get_best_map(available_maps, upper_loser_scores)
             available_maps.remove(map5)
             map_sequence.append(('pick', upper_loser_team, map5))
 
             # Other team picks Map 4
-            map6 = random.choice(available_maps)
+            map6 = self._get_best_map(available_maps, other_team_scores)
             available_maps.remove(map6)
             map_sequence.append(('pick', other_team, map6))
 
