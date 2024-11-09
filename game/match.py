@@ -1,15 +1,19 @@
 import random
 from .team import Team
 from .player import Player
+import os
+from datetime import datetime
 
 class Match:
-    def __init__(self, home_team: Team, away_team: Team, best_of=3, upper_loser=None):
+    def __init__(self, home_team: Team, away_team: Team, best_of=3, upper_loser=None, match_type='R', current_year=None):
         self.home_team = home_team
         self.away_team = away_team
         self.best_of = best_of
         self.result = None
         self.available_maps = Player.MAPS.copy()  # Use maps from Player class
         self.upper_loser = upper_loser  # Track which team came from upper bracket
+        self.match_type = match_type
+        self.current_year = current_year
 
     def _calculate_map_scores(self, team: Team, opponent: Team) -> dict:
         """Calculate strategic scores for each map based on team strengths/weaknesses."""
@@ -184,14 +188,72 @@ class Match:
         }
         return self.result
 
+    def _create_stats_file(self, region):
+        """Create directory structure and return file path for match statistics."""
+        # Ensure we have a valid current_year
+        if not self.current_year:
+            raise ValueError("current_year must be set for match statistics")
+            
+        # For World Championship matches, use a special folder
+        if self.match_type in ['G', 'K']:
+            base_path = f"previous_results/{self.current_year}/World_Championship"
+        else:
+            base_path = f"previous_results/{self.current_year}/{region}"
+            
+        os.makedirs(base_path, exist_ok=True)
+        
+        # For World Championship matches, add stage information to filename
+        if self.match_type == 'G':
+            filename = f"{self.home_team.name}_{self.away_team.name}_Group.txt"
+        elif self.match_type == 'K':
+            filename = f"{self.home_team.name}_{self.away_team.name}_Knockout.txt"
+        else:
+            filename = f"{self.home_team.name}_{self.away_team.name}_{self.match_type}.txt"
+            
+        return os.path.join(base_path, filename)
+        
+    def _write_map_stats(self, filepath, map_name, map_stats):
+        """Write statistics for a single map to the file."""
+        with open(filepath, 'a', encoding='utf-8') as f:
+            f.write(f"\nMap: {map_name}\n")
+            f.write("-" * 13 + "\n")
+            
+            # Write home team stats
+            f.write(f"{self.home_team.name}\n")
+            f.write("-" * 13 + "\n")
+            f.write("Player Name, K, D, A\n")
+            for player, stats in map_stats['home_team'].items():
+                f.write(f"{player}, {stats['K']}, {stats['D']}, {stats['A']}\n")
+            
+            f.write("\n")
+            
+            # Write away team stats
+            f.write(f"{self.away_team.name}\n")
+            f.write("-" * 13 + "\n")
+            f.write("Player Name, K, D, A\n")
+            for player, stats in map_stats['away_team'].items():
+                f.write(f"{player}, {stats['K']}, {stats['D']}, {stats['A']}\n")
+            
+            f.write("\n" + "=" * 30 + "\n")
+
     def simulate_game(self, current_map):
         home_score = 0
         away_score = 0
         round_details = []
+        
+        # Initialize map statistics
+        map_stats = {
+            'home_team': {player: {'K': 0, 'D': 0, 'A': 0} for player in self.home_team.players},
+            'away_team': {player: {'K': 0, 'D': 0, 'A': 0} for player in self.away_team.players}
+        }
 
         while home_score < 13 and away_score < 13:
             round_winner, round_info = self.simulate_round(current_map)
             round_details.append(round_info)
+            
+            # Update statistics based on round results
+            self._update_stats(round_info, map_stats)
+            
             if round_winner == self.home_team:
                 home_score += 1
             else:
@@ -201,12 +263,36 @@ class Match:
                 while abs(home_score - away_score) < 2:
                     round_winner, round_info = self.simulate_round(current_map)
                     round_details.append(round_info)
+                    self._update_stats(round_info, map_stats)
                     if round_winner == self.home_team:
                         home_score += 1
                     else:
                         away_score += 1
 
+        # Write map statistics to file
+        stats_file = self._create_stats_file(self.home_team.region)
+        self._write_map_stats(stats_file, current_map, map_stats)
+
         return home_score, away_score, round_details
+
+    def _update_stats(self, round_info, map_stats):
+        """Update map statistics based on round results."""
+        for encounter in round_info['encounters']:
+            # Update kills and assists for winners
+            for winner in encounter['winners']:
+                team_key = 'home_team' if winner in self.home_team.players else 'away_team'
+                map_stats[team_key][winner]['K'] += len(encounter['losers'])
+                
+            # Update deaths for losers
+            for loser in encounter['losers']:
+                team_key = 'home_team' if loser in self.home_team.players else 'away_team'
+                map_stats[team_key][loser]['D'] += 1
+                
+            # Update assists (max one assist per kill)
+            for winner in encounter['winners'][1:]:  # Skip the first winner (assumed to be the killer)
+                team_key = 'home_team' if winner in self.home_team.players else 'away_team'
+                if random.random() < 0.7:  # 70% chance for assist
+                    map_stats[team_key][winner]['A'] += 1
 
     def simulate_round(self, current_map):
         home_alive = self.home_team.players.copy()

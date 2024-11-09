@@ -3,11 +3,12 @@ from .tournament import DoubleEliminationTournament
 import random
 
 class WorldChampionship:
-    def __init__(self, teams):
+    def __init__(self, teams, current_year=None):
         self.teams = teams
         self.regions = ["Americas", "Europe", "China", "Pacific"]
         self.match_results = []
         self.group_winners = []
+        self.current_year = current_year
 
     def run(self):
         print("\n" + "="*50)
@@ -24,7 +25,12 @@ class WorldChampionship:
 
         # Knockout Stage - Set seeded=True for World Championship format
         knockout_teams = self.create_knockout_matchups(self.group_winners)
-        tournament = DoubleEliminationTournament(knockout_teams, seeded=False)
+        tournament = DoubleEliminationTournament(
+            knockout_teams, 
+            seeded=False, 
+            match_type='K', 
+            current_year=self.current_year
+        )
         tournament.run(silent=True)
         self.final_standings = tournament.get_standings()
         
@@ -60,35 +66,35 @@ class WorldChampionship:
             print("-"*25)
             
             # Initial upper bracket match
-            match1 = Match(group[0], group[1])
+            match1 = Match(group[0], group[1], match_type='G', current_year=self.current_year)
             result = match1.play()
             self.match_results.append((f"Group {i+1} Upper Bracket", result))
             self.print_match_result(result)
             upper_winner, upper_loser = result['winner'], result['loser']
 
             # Initial lower bracket match
-            match2 = Match(group[2], group[3])
+            match2 = Match(group[2], group[3], match_type='G', current_year=self.current_year)
             result = match2.play()
             self.match_results.append((f"Group {i+1} Lower Bracket", result))
             self.print_match_result(result)
             lower_winner, lower_loser = result['winner'], result['loser']
 
             # Winners' match (for 1st seed)
-            match3 = Match(upper_winner, lower_winner)
+            match3 = Match(upper_winner, lower_winner, match_type='G', current_year=self.current_year)
             result = match3.play()
             self.match_results.append((f"Group {i+1} Winners' Match", result))
             self.print_match_result(result)
             first_seed, winners_loser = result['winner'], result['loser']
 
             # Elimination match
-            match4 = Match(upper_loser, lower_loser)
+            match4 = Match(upper_loser, lower_loser, match_type='G', current_year=self.current_year)
             result = match4.play()
             self.match_results.append((f"Group {i+1} Elimination Match", result))
             self.print_match_result(result)
             elim_winner, elim_loser = result['winner'], result['loser']
 
             # Decider match (for 2nd seed)
-            match5 = Match(winners_loser, elim_winner)
+            match5 = Match(winners_loser, elim_winner, match_type='G', current_year=self.current_year)
             result = match5.play()
             self.match_results.append((f"Group {i+1} Decider Match", result))
             self.print_match_result(result)

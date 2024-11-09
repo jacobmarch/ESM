@@ -104,7 +104,10 @@ class GameManager:
                 return
 
         if len(qualified_teams) == 16:
-            self.world_championship = WorldChampionship(qualified_teams)
+            self.world_championship = WorldChampionship(
+                teams=qualified_teams,
+                current_year=self.current_year
+            )
             self.world_championship.run()
             
             # Save World Championship results

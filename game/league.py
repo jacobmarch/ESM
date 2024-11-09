@@ -79,7 +79,7 @@ class League:
         return preview
 
     def run_regular_season(self):
-        self.season = Season(self.teams)
+        self.season = Season(self.teams, self.current_year)
         self.season.run_regular_season()
         
         # Format and save regular season results
@@ -90,20 +90,25 @@ class League:
         save_results(self.current_year, self.name, results_text)
 
     def run_playoffs(self):
-        if self.season:
-            top_teams = self.season.get_top_teams(8)
-            self.playoff_tournament = DoubleEliminationTournament(top_teams)
-            self.playoff_tournament.run(silent=True)
-            self.playoff_results = self.playoff_tournament.get_standings()
-            
-            # Format and save playoff results
-            results_text = f"\nPlayoff Results - {self.name}\n"
-            results_text += "=" * 50 + "\n"
-            results_text += self.playoff_tournament.get_results_text()  # New method needed
-            
-            save_results(self.current_year, self.name, results_text)
-        else:
-            print(f"Error: Regular season hasn't been played yet for {self.name}.")
+        print(f"\nRunning {self.name} Playoffs...")
+        top_teams = self.season.get_top_teams(8)
+        self.playoff_tournament = DoubleEliminationTournament(
+            teams=top_teams,
+            seeded=True,
+            match_type='P',
+            current_year=self.current_year
+        )
+        self.playoff_tournament.run(silent=True)
+        self.playoff_results = self.playoff_tournament.get_standings()
+        
+        # Save playoff results
+        results_text = f"{self.name} Playoff Results {self.current_year}\n"
+        results_text += "=" * 50 + "\n"
+        results_text += self.playoff_tournament.get_results_text()
+        
+        save_results(self.current_year, f"{self.name}/Playoffs", results_text)
+        
+        return self.playoff_results[:4]
 
     def display_off_season_results(self):
         if self.off_season_results:

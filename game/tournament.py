@@ -1,7 +1,7 @@
 from .match import Match
 
 class DoubleEliminationTournament:
-    def __init__(self, teams, seeded=True):
+    def __init__(self, teams, seeded=True, match_type='P', current_year=None):
         self.teams = teams
         self.upper_bracket = self._create_seeded_bracket(teams) if seeded else teams.copy()
         self.lower_bracket = []
@@ -9,6 +9,8 @@ class DoubleEliminationTournament:
         self.results = []
         self.grand_finalist = None
         self.match_results = []
+        self.match_type = match_type
+        self.current_year = current_year
 
     def _create_seeded_bracket(self, teams):
         if len(teams) != 8:
@@ -52,7 +54,13 @@ class DoubleEliminationTournament:
             # Process matches in pairs (0-1, 2-3, 4-5, 6-7)
             for i in range(0, len(self.upper_bracket), 2):
                 if i + 1 < len(self.upper_bracket):
-                    match = Match(self.upper_bracket[i], self.upper_bracket[i+1], best_of=3)
+                    match = Match(
+                        self.upper_bracket[i], 
+                        self.upper_bracket[i+1], 
+                        best_of=3, 
+                        match_type=self.match_type,
+                        current_year=self.current_year
+                    )
                     result = match.play()
                     self.match_results.append(("Upper Bracket", result))
                     if not silent:
@@ -70,7 +78,13 @@ class DoubleEliminationTournament:
             next_round = []
             for i in range(0, len(self.lower_bracket), 2):
                 if i + 1 < len(self.lower_bracket):
-                    match = Match(self.lower_bracket[i], self.lower_bracket[i+1], best_of=3)
+                    match = Match(
+                        self.lower_bracket[i], 
+                        self.lower_bracket[i+1], 
+                        best_of=3, 
+                        match_type=self.match_type,
+                        current_year=self.current_year
+                    )
                     result = match.play()
                     self.match_results.append(("Lower Bracket", result))
                     if not silent:
@@ -90,7 +104,9 @@ class DoubleEliminationTournament:
                 self.lower_bracket[i], 
                 self.upper_bracket_losers[i], 
                 best_of=best_of,
-                upper_loser=self.upper_bracket_losers[i]  # Pass the upper bracket loser
+                upper_loser=self.upper_bracket_losers[i],  # Pass the upper bracket loser
+                match_type=self.match_type,
+                current_year=self.current_year
             )
             result = match.play()
             self.match_results.append(("Lower Bracket with Upper Losers", result))
@@ -106,7 +122,13 @@ class DoubleEliminationTournament:
         self.upper_bracket_losers.clear()
 
     def play_grand_final(self, silent):
-        match = Match(self.grand_finalist, self.lower_bracket[0], best_of=5)
+        match = Match(
+            self.grand_finalist, 
+            self.lower_bracket[0], 
+            best_of=5, 
+            match_type=self.match_type,
+            current_year=self.current_year
+        )
         result = match.play()
         self.match_results.append(("Grand Final", result))
         if not silent:

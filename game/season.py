@@ -3,8 +3,9 @@ from .match import Match
 from .tournament import DoubleEliminationTournament
 
 class Season:
-    def __init__(self, teams):
+    def __init__(self, teams, current_year):
         self.teams = teams
+        self.current_year = current_year
         self.matches = []
         # Track wins, losses, map wins, map losses for each team
         self.standings = {team: {'wins': 0, 'losses': 0, 'map_wins': 0, 'map_losses': 0} for team in teams}
@@ -27,7 +28,7 @@ class Season:
         
         # Play all matches
         for home_team, away_team in matchups:
-            match = Match(home_team, away_team)
+            match = Match(home_team, away_team, match_type='R', current_year=self.current_year)
             result = match.play()
             self.update_standings(result)
             self.matches.append(match)
@@ -215,7 +216,11 @@ class Season:
     def run_playoffs(self, league_name):
         print(f"\n{league_name} Playoffs:")
         top_teams = self.get_top_teams(8)  # Get top 8 teams for playoffs
-        tournament = DoubleEliminationTournament(top_teams)
+        tournament = DoubleEliminationTournament(
+            teams=top_teams, 
+            match_type='P',
+            current_year=self.current_year  # Pass current_year to tournament
+        )
         tournament.run()
         final_standings = tournament.get_standings()
         
@@ -223,7 +228,7 @@ class Season:
         for i, team in enumerate(final_standings[:4], 1):
             print(f"{i}. {team.name}")
 
-        return final_standings[:4]  # Return top 4 teams for World Championship qualification
+        return final_standings[:4]
 
     def get_top_teams(self, count):
         """Get top N teams based on standings"""
