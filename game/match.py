@@ -214,16 +214,29 @@ class Match:
         encounters = []
 
         while home_alive and away_alive:
-            home_player = random.choice(home_alive)
-            away_player = random.choice(away_alive)
-
-            winner, loser = self.simulate_encounter(home_player, away_player, current_map)
-            encounters.append((winner, loser))
-
-            if winner in home_alive:
-                away_alive.remove(loser)
-            else:
-                home_alive.remove(loser)
+            # Determine group sizes based on available players
+            max_group_size = min(3, len(home_alive), len(away_alive))
+            home_group_size = random.randint(1, max_group_size)
+            away_group_size = random.randint(1, max_group_size)
+            
+            # Select random players for each group
+            home_group = random.sample(home_alive, home_group_size)
+            away_group = random.sample(away_alive, away_group_size)
+            
+            winners, losers = self.simulate_group_encounter(home_group, away_group, current_map)
+            encounters.append(({
+                'home_group': home_group,
+                'away_group': away_group,
+                'winners': winners,
+                'losers': losers
+            }))
+            
+            # Remove eliminated players
+            for loser in losers:
+                if loser in home_alive:
+                    home_alive.remove(loser)
+                else:
+                    away_alive.remove(loser)
 
         round_winner = self.home_team if home_alive else self.away_team
         round_info = {
@@ -234,19 +247,30 @@ class Match:
         }
         return round_winner, round_info
 
-    def simulate_encounter(self, player1: Player, player2: Player, current_map):
-        # Apply map-specific skill modifiers
-        player1_skill = player1.skill + player1.get_map_skill_modifier(current_map)
-        player2_skill = player2.skill + player2.get_map_skill_modifier(current_map)
+    def simulate_group_encounter(self, home_group: list, away_group: list, current_map: str):
+        """Simulate an encounter between two groups of players."""
+        # Calculate numerical advantage bonus (0.1 per player advantage)
+        number_advantage = (len(home_group) - len(away_group)) * 0.1
         
-        skill_diff = player1_skill - player2_skill
-        win_probability = 0.5 + (skill_diff / 200)
-        win_probability = max(0.1, min(0.9, win_probability))
-
-        if random.random() < win_probability:
-            return player1, player2
+        # Calculate total effective skill for each group
+        home_skill = sum(p.skill + p.get_map_skill_modifier(current_map) for p in home_group)
+        away_skill = sum(p.skill + p.get_map_skill_modifier(current_map) for p in away_group)
+        
+        # Apply numerical advantage bonus
+        if number_advantage > 0:
+            home_skill *= (1 + number_advantage)
+        elif number_advantage < 0:
+            away_skill *= (1 + abs(number_advantage))
+        
+        # Calculate win probability
+        total_skill = home_skill + away_skill
+        home_win_prob = home_skill / total_skill
+        home_win_prob = max(0.1, min(0.9, home_win_prob))  # Clamp between 0.1 and 0.9
+        
+        if random.random() < home_win_prob:
+            return home_group, away_group
         else:
-            return player2, player1
+            return away_group, home_group
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name}"
