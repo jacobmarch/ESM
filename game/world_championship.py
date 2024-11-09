@@ -225,13 +225,24 @@ class WorldChampionship:
                 home_team = result['home_team']
                 away_team = result['away_team']
                 text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
-                # Add map sequence
+                
+                # Calculate map differentials
+                temp_match = Match(home_team, away_team)
+                map_differentials = {
+                    map_name: temp_match._calculate_map_scores(home_team, away_team)[map_name] - 
+                             temp_match._calculate_map_scores(away_team, home_team)[map_name]
+                    for map_name in temp_match.available_maps
+                }
+                
+                # Add map sequence with differentials
                 text += "Map Sequence:\n"
                 for action, team, map_name in result['map_sequence']:
                     if action == 'decider':
-                        text += f"     Decider: {map_name}\n"
+                        text += f"     Decider: {map_name} (Diff: {map_differentials[map_name]:+d})\n"
                     else:
-                        text += f"     {team.name} {action}: {map_name}\n"
+                        # Show differential from the picking team's perspective
+                        diff = map_differentials[map_name] if team == home_team else -map_differentials[map_name]
+                        text += f"     {team.name} {action}: {map_name} (Diff: {diff:+d})\n"
                 
                 # Add map scores
                 for game in result['games']:
@@ -266,13 +277,24 @@ class WorldChampionship:
                 home_team = result['home_team']
                 away_team = result['away_team']
                 text += f"({home_team.rating:.1f}) {home_team.name} {result['home_score']} - {result['away_score']} {away_team.name} ({away_team.rating:.1f})\n"
-                # Add map sequence
+                
+                # Calculate map differentials
+                temp_match = Match(home_team, away_team)
+                map_differentials = {
+                    map_name: temp_match._calculate_map_scores(home_team, away_team)[map_name] - 
+                             temp_match._calculate_map_scores(away_team, home_team)[map_name]
+                    for map_name in temp_match.available_maps
+                }
+                
+                # Add map sequence with differentials
                 text += "Map Sequence:\n"
                 for action, team, map_name in result['map_sequence']:
                     if action == 'decider':
-                        text += f"     Decider: {map_name}\n"
+                        text += f"     Decider: {map_name} (Diff: {map_differentials[map_name]:+d})\n"
                     else:
-                        text += f"     {team.name} {action}: {map_name}\n"
+                        # Show differential from the picking team's perspective
+                        diff = map_differentials[map_name] if team == home_team else -map_differentials[map_name]
+                        text += f"     {team.name} {action}: {map_name} (Diff: {diff:+d})\n"
                 
                 # Add map scores
                 for game in result['games']:
