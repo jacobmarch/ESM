@@ -48,38 +48,55 @@ class Match:
         available_maps = self.available_maps.copy()
         map_sequence = []
         
-        # Calculate map scores for both teams
+        # Calculate base map scores for both teams
         home_map_scores = self._calculate_map_scores(self.home_team, self.away_team)
         away_map_scores = self._calculate_map_scores(self.away_team, self.home_team)
+        
+        # Calculate differential scores (home perspective)
+        map_differentials = {
+            map_name: home_map_scores[map_name] - away_map_scores[map_name]
+            for map_name in available_maps
+        }
+
+        def _get_best_differential_map(maps, team_is_home):
+            """Returns map with highest differential for given team"""
+            diffs = {m: (map_differentials[m] if team_is_home else -map_differentials[m]) 
+                    for m in maps}
+            return max(diffs.items(), key=lambda x: x[1])[0]
+        
+        def _get_worst_differential_map(maps, team_is_home):
+            """Returns map with lowest differential for given team"""
+            diffs = {m: (map_differentials[m] if team_is_home else -map_differentials[m]) 
+                    for m in maps}
+            return min(diffs.items(), key=lambda x: x[1])[0]
 
         if self.best_of == 3:
-            # Team A Ban (worst enemy map)
-            map1 = self._get_worst_map(available_maps, home_map_scores)
+            # Team A Ban (map where they're at biggest disadvantage)
+            map1 = _get_worst_differential_map(available_maps, True)
             available_maps.remove(map1)
             map_sequence.append(('ban', self.home_team, map1))
 
-            # Team B Ban (worst enemy map)
-            map2 = self._get_worst_map(available_maps, away_map_scores)
+            # Team B Ban (map where they're at biggest disadvantage)
+            map2 = _get_worst_differential_map(available_maps, False)
             available_maps.remove(map2)
             map_sequence.append(('ban', self.away_team, map2))
 
-            # Team A Pick (best remaining map)
-            map3 = self._get_best_map(available_maps, home_map_scores)
+            # Team A Pick (map where they have biggest advantage)
+            map3 = _get_best_differential_map(available_maps, True)
             available_maps.remove(map3)
             map_sequence.append(('pick', self.home_team, map3))
 
-            # Team B Pick (best remaining map)
-            map4 = self._get_best_map(available_maps, away_map_scores)
+            # Team B Pick (map where they have biggest advantage)
+            map4 = _get_best_differential_map(available_maps, False)
             available_maps.remove(map4)
             map_sequence.append(('pick', self.away_team, map4))
 
-            # Team A Ban
-            map5 = self._get_worst_map(available_maps, home_map_scores)
+            # Continue with remaining bans using differential
+            map5 = _get_worst_differential_map(available_maps, True)
             available_maps.remove(map5)
             map_sequence.append(('ban', self.home_team, map5))
 
-            # Team B Ban
-            map6 = self._get_worst_map(available_maps, away_map_scores)
+            map6 = _get_worst_differential_map(available_maps, False)
             available_maps.remove(map6)
             map_sequence.append(('ban', self.away_team, map6))
 
@@ -91,39 +108,36 @@ class Match:
 
         else:  # best_of == 5
             upper_loser_team = self.upper_loser if self.upper_loser else self.home_team
-            other_team = self.away_team if upper_loser_team == self.home_team else self.home_team
-            
-            upper_loser_scores = home_map_scores if upper_loser_team == self.home_team else away_map_scores
-            other_team_scores = away_map_scores if upper_loser_team == self.home_team else home_map_scores
+            upper_loser_is_home = upper_loser_team == self.home_team
 
-            # Upper bracket loser bans twice
-            map1 = self._get_worst_map(available_maps, upper_loser_scores)
+            # Upper bracket loser bans twice (maps where they're at biggest disadvantage)
+            map1 = _get_worst_differential_map(available_maps, upper_loser_is_home)
             available_maps.remove(map1)
             map_sequence.append(('ban', upper_loser_team, map1))
 
-            map2 = self._get_worst_map(available_maps, upper_loser_scores)
+            map2 = _get_worst_differential_map(available_maps, upper_loser_is_home)
             available_maps.remove(map2)
             map_sequence.append(('ban', upper_loser_team, map2))
 
-            # Upper bracket loser picks Map 1
-            map3 = self._get_best_map(available_maps, upper_loser_scores)
+            # Upper bracket loser picks Map 1 (biggest advantage)
+            map3 = _get_best_differential_map(available_maps, upper_loser_is_home)
             available_maps.remove(map3)
             map_sequence.append(('pick', upper_loser_team, map3))
 
             # Other team picks Map 2
-            map4 = self._get_best_map(available_maps, other_team_scores)
+            map4 = _get_best_differential_map(available_maps, not upper_loser_is_home)
             available_maps.remove(map4)
-            map_sequence.append(('pick', other_team, map4))
+            map_sequence.append(('pick', self.away_team if upper_loser_is_home else self.home_team, map4))
 
             # Upper bracket loser picks Map 3
-            map5 = self._get_best_map(available_maps, upper_loser_scores)
+            map5 = _get_best_differential_map(available_maps, upper_loser_is_home)
             available_maps.remove(map5)
             map_sequence.append(('pick', upper_loser_team, map5))
 
             # Other team picks Map 4
-            map6 = self._get_best_map(available_maps, other_team_scores)
+            map6 = _get_best_differential_map(available_maps, not upper_loser_is_home)
             available_maps.remove(map6)
-            map_sequence.append(('pick', other_team, map6))
+            map_sequence.append(('pick', self.away_team if upper_loser_is_home else self.home_team, map6))
 
             # Final Map
             map7 = available_maps[0]

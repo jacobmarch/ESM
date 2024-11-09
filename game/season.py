@@ -172,30 +172,29 @@ class Season:
             stats = self.standings[team]
             text += f"{i}. {team.name:<20} {stats['wins']}-{stats['losses']} ({stats['map_wins']}-{stats['map_losses']})\n"
         
-        # Add match results with updated formatting
+        # Update match results section
         text += "\nMatch Results:\n"
         text += "-" * 40 + "\n"
         for match in self.matches:
             result = match.play()
             text += f"({result['home_team'].rating:.1f}) {result['home_team'].name} {result['home_score']} - {result['away_score']} {result['away_team'].name} ({result['away_team'].rating:.1f})\n"
             
-            # Calculate map scores for both teams
-            home_map_scores = match._calculate_map_scores(result['home_team'], result['away_team'])
-            away_map_scores = match._calculate_map_scores(result['away_team'], result['home_team'])
+            # Calculate map differentials
+            map_differentials = {
+                map_name: match._calculate_map_scores(result['home_team'], result['away_team'])[map_name] - 
+                         match._calculate_map_scores(result['away_team'], result['home_team'])[map_name]
+                for map_name in match.available_maps
+            }
             
-            # Add map sequence with scores
+            # Add map sequence with differentials
             text += "Map Sequence:\n"
             for action, team, map_name in result['map_sequence']:
                 if action == 'decider':
-                    home_score = home_map_scores[map_name]
-                    away_score = away_map_scores[map_name]
-                    text += f"     Decider: {map_name} (H:{home_score:+d}/A:{away_score:+d})\n"
+                    text += f"     Decider: {map_name} (Diff: {map_differentials[map_name]:+d})\n"
                 else:
-                    if team == result['home_team']:
-                        score = home_map_scores[map_name]
-                    else:
-                        score = away_map_scores[map_name]
-                    text += f"     {team.name} {action}: {map_name} ({score:+d})\n"
+                    # Show differential from the picking team's perspective
+                    diff = map_differentials[map_name] if team == result['home_team'] else -map_differentials[map_name]
+                    text += f"     {team.name} {action}: {map_name} (Diff: {diff:+d})\n"
             
             # Add individual map scores
             for game in result['games']:
