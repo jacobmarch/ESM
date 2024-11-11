@@ -278,21 +278,23 @@ class Match:
     def _update_stats(self, round_info, map_stats):
         """Update map statistics based on round results."""
         for encounter in round_info['encounters']:
-            # Update kills and assists for winners
-            for winner in encounter['winners']:
-                team_key = 'home_team' if winner in self.home_team.players else 'away_team'
-                map_stats[team_key][winner]['K'] += len(encounter['losers'])
-                
+            # Select one winner to get the kills (first player in winners list)
+            if encounter['winners']:
+                killer = encounter['winners'][0]
+                team_key = 'home_team' if killer in self.home_team.players else 'away_team'
+                # Award kills only to the primary killer
+                map_stats[team_key][killer]['K'] += len(encounter['losers'])
+            
             # Update deaths for losers
             for loser in encounter['losers']:
                 team_key = 'home_team' if loser in self.home_team.players else 'away_team'
                 map_stats[team_key][loser]['D'] += 1
-                
-            # Update assists (max one assist per kill)
-            for winner in encounter['winners'][1:]:  # Skip the first winner (assumed to be the killer)
+            
+            # Update assists for other winners
+            for winner in encounter['winners'][1:]:  # Skip the killer, only process potential assisters
                 team_key = 'home_team' if winner in self.home_team.players else 'away_team'
-                if random.random() < 0.7:  # 70% chance for assist
-                    map_stats[team_key][winner]['A'] += 1
+                if random.random() < 0.35:  # 35% chance for assist
+                    map_stats[team_key][winner]['A'] += len(encounter['losers'])
 
     def simulate_round(self, current_map):
         home_alive = self.home_team.players.copy()
