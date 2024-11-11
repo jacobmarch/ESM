@@ -136,6 +136,40 @@ Contains all static data for the game:
   - China: 10 teams
   - Pacific: 10 teams
 
+### Results Viewer GUI (gui.py)
+Interactive graphical interface for viewing simulation results:
+- Features:
+  - Real-time file system monitoring
+  - Hierarchical navigation of results
+  - Search/filter functionality
+  - Markdown rendering support
+- Components:
+  - File Tree:
+    - Displays complete directory structure
+    - Auto-updates when new files are created
+    - Supports filtering by filename
+  - Content Viewer:
+    - Renders markdown files with proper formatting
+    - Displays plain text files
+    - Automatic scrolling support
+- Technical Details:
+  - Built with tkinter and ttk
+  - Uses watchdog for file system monitoring
+  - Implements markdown and tkhtmlview for content rendering
+  - Supports UTF-8 encoded files
+- Usage:
+  - Run in parallel with main simulation
+  - Navigate through years, regions, and competitions
+  - Search for specific results
+  - View formatted match reports and statistics
+
+### File Storage
+- Results stored in `previous_results` directory
+- Organized by year and competition
+- Maintains complete match histories
+- Supports AI summary generation
+- **Viewable through GUI interface**
+
 ## Technical Details
 
 ### Match Simulation
@@ -156,11 +190,5 @@ Contains all static data for the game:
 - Team rating: Average of player skills
 - Match probability: Skill difference based
 - Rating tracking between seasons
-
-### File Storage
-- Results stored in `previous_results` directory
-- Organized by year and competition
-- Maintains complete match histories
-- Supports AI summary generation
 
 This README provides a comprehensive reference for understanding the game's architecture, components, and systems. Each section can be used as a quick reference for specific functionality or as a guide for modifications and enhancements.
