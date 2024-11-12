@@ -2,9 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import os
 from pathlib import Path
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 import markdown
 from tkhtmlview import HTMLLabel
 
@@ -13,170 +10,425 @@ class ResultsViewer(tk.Tk):
         super().__init__()
         
         self.title("Esports Manager Results Viewer")
-        self.geometry("1200x800")
+        self.geometry("1920x1080")
         
-        # Create main container
-        self.main_container = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
-        self.main_container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # Initialize tracking variables
+        self.current_year = None
+        self.current_region = None
         
-        # Left panel for navigation
-        self.left_panel = ttk.Frame(self.main_container)
-        self.main_container.add(self.left_panel)
+        # Initialize views
+        self.setup_year_view()
+        self.setup_dashboard()
         
-        # Search frame
-        self.search_frame = ttk.Frame(self.left_panel)
-        self.search_frame.pack(fill=tk.X, padx=5, pady=5)
+        # Initially show year view
+        self.show_year_view()
+
+    def setup_year_view(self):
+        self.year_frame = ttk.Frame(self)
         
-        self.search_var = tk.StringVar()
-        self.search_var.trace('w', self.filter_tree)
-        self.search_entry = ttk.Entry(self.search_frame, textvariable=self.search_var)
-        self.search_entry.pack(fill=tk.X)
+        # Get available years from directory
+        years = self.get_available_years()
         
-        # Create treeview
-        self.tree = ttk.Treeview(self.left_panel)
-        self.tree.pack(fill=tk.BOTH, expand=True)
+        # Create year buttons
+        for year in years:
+            btn = ttk.Button(self.year_frame, text=year,
+                           command=lambda y=year: self.select_year(y))
+            btn.pack(pady=5)
+
+    def setup_dashboard(self):
+        self.dashboard_frame = ttk.Frame(self)
         
-        # Scrollbar for tree
-        self.tree_scroll = ttk.Scrollbar(self.left_panel, orient="vertical", command=self.tree.yview)
-        self.tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.tree.configure(yscrollcommand=self.tree_scroll.set)
+        # Region buttons frame
+        self.region_frame = ttk.Frame(self.dashboard_frame)
+        self.region_frame.pack(fill=tk.X, pady=10)
         
-        # Right panel for content
-        self.right_panel = ttk.Frame(self.main_container)
-        self.main_container.add(self.right_panel)
+        regions = ["Americas", "Europe", "Pacific", "China", "World Championship"]
+        for region in regions:
+            btn = ttk.Button(self.region_frame, text=region,
+                           command=lambda r=region: self.select_region(r))
+            btn.pack(side=tk.LEFT, padx=5)
         
-        # Frame for content with scrollbar
-        self.content_frame = ttk.Frame(self.right_panel)
+        # Content frame with sections
+        self.content_frame = ttk.Frame(self.dashboard_frame)
         self.content_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Create both text widget and HTML label
-        self.content_text = tk.Text(self.content_frame, wrap=tk.WORD, padx=10, pady=10)
-        self.html_label = HTMLLabel(self.content_frame, padx=10, pady=10)
+        # Create the four sections
+        sections = ["Off-Season", "Preseason", "Regular Season", "Playoffs"]
+        self.section_frames = {}
         
-        # Scrollbar for content
-        self.text_scroll = ttk.Scrollbar(self.content_frame, orient="vertical")
-        self.text_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Configure scrollbar for both widgets
-        self.content_text.configure(yscrollcommand=self.text_scroll.set)
-        self.text_scroll.configure(command=self.content_text.yview)
-        
-        # Bind tree selection
-        self.tree.bind('<<TreeviewSelect>>', self.on_select)
-        
-        # Initialize file watcher
-        self.setup_file_watcher()
-        
-        # Load initial data
-        self.refresh_tree()
+        for i, section in enumerate(sections):
+            # Create a label frame for the section
+            section_frame = ttk.LabelFrame(self.content_frame, text=section)
+            section_frame.grid(row=i//2, column=i%2, padx=5, pady=5, sticky="nsew")
+            
+            # Add a canvas and scrollbar for scrolling
+            canvas = tk.Canvas(section_frame)
+            scrollbar = ttk.Scrollbar(section_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = ttk.Frame(canvas)
+            
+            # Configure the canvas
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Pack the scrollbar and canvas
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            
+            # Create a window in the canvas for the scrollable frame
+            canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            
+            # Configure the scrollable frame to expand to canvas width
+            def configure_scroll_region(event, canvas=canvas):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+            
+            def configure_frame_width(event, canvas=canvas, canvas_frame=canvas_frame):
+                canvas.itemconfig(canvas_frame, width=event.width)
+            
+            scrollable_frame.bind("<Configure>", configure_scroll_region)
+            canvas.bind("<Configure>", configure_frame_width)
+            
+            if section == "Regular Season":
+                # Special handling for Regular Season section
+                self.standings_text = ttk.Label(scrollable_frame, wraplength=500)
+                self.standings_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+                
+                # Add view results button
+                self.match_viewer = None
+                ttk.Button(scrollable_frame, text="View Results", 
+                    command=self.show_match_viewer).pack(pady=5)
+            else:
+                # Other sections get regular labels
+                self.section_frames[section] = ttk.Label(scrollable_frame, wraplength=500)
+                self.section_frames[section].pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+            
+        # Configure grid weights
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_columnconfigure(1, weight=1)
+        self.content_frame.grid_rowconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=1)
 
-    def setup_file_watcher(self):
-        self.observer = Observer()
-        event_handler = ResultsFileHandler(self)
-        self.observer.schedule(event_handler, "previous_results", recursive=True)
-        self.observer.start()
-
-    def add_directory_to_tree(self, path, parent=""):
-        """Recursively add directory contents to tree"""
-        try:
-            for item in sorted(path.iterdir()):
-                if item.is_dir():
-                    # Create directory node
-                    dir_id = self.tree.insert(parent, "end", text=item.name)
-                    # Recursively add its contents
-                    self.add_directory_to_tree(item, dir_id)
-                else:
-                    # Add file node
-                    self.tree.insert(parent, "end", text=item.name, values=(str(item),))
-        except PermissionError:
-            pass  # Skip directories we can't access
-
-    def refresh_tree(self):
-        # Clear existing items
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        
-        # Load directory structure
+    def get_available_years(self):
         results_path = Path("previous_results")
         if not results_path.exists():
+            return []
+        return sorted([d.name for d in results_path.iterdir() if d.is_dir()])
+
+    def show_year_view(self):
+        self.dashboard_frame.pack_forget()
+        self.year_frame.pack(fill=tk.BOTH, expand=True)
+
+    def show_dashboard(self):
+        self.year_frame.pack_forget()
+        self.dashboard_frame.pack(fill=tk.BOTH, expand=True)
+
+    def select_year(self, year):
+        self.current_year = year
+        self.show_dashboard()
+
+    def select_region(self, region):
+        self.current_region = region  # Set the current region
+        # Adjusted file name to match the actual file's case
+        file_path = Path(f"previous_results/{self.current_year}/{region}_results.txt")
+        if not file_path.exists():
+            print(f"File not found: {file_path}")
             return
         
-        # Recursively populate tree
-        self.add_directory_to_tree(results_path)
-
-    def filter_tree(self, *args):
-        search_term = self.search_var.get().lower()
-        self.refresh_tree()  # Reset tree
-        
-        if not search_term:
-            return
+        # Read and parse the file
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
             
-        def check_item_and_children(item):
-            matches = False
-            item_text = self.tree.item(item)['text'].lower()
-            
-            # Check children first
-            for child in self.tree.get_children(item):
-                if check_item_and_children(child):
-                    matches = True
-                
-            # If neither item nor children match, detach
-            if not matches and not search_term in item_text:
-                self.tree.detach(item)
-                return False
-                
-            return True
+        # Extract sections
+        sections = self.parse_results_file(content)
         
-        # Check all top-level items
-        for item in self.tree.get_children():
-            check_item_and_children(item)
+        # Update section contents
+        for section, text in sections.items():
+            if section != "Regular Season" and section in self.section_frames:
+                self.section_frames[section].config(text=text)
+        
+        # Update standings text separately
+        if "Regular Season" in sections:
+            standings_text = ""
+            for line in sections["Regular Season"].split('\n'):
+                if "Standings:" in line or (line.strip() and line[0].isdigit()):
+                    standings_text += line + '\n'
+            self.standings_text.config(text=standings_text)
 
-    def show_content(self, file_path, content):
-        """Display content either as markdown or plain text"""
-        # Hide both widgets initially
-        self.content_text.pack_forget()
-        self.html_label.pack_forget()
+    def parse_results_file(self, content):
+        sections = {
+            "Off-Season": "",
+            "Preseason": "",
+            "Regular Season": "",
+            "Playoffs": ""
+        }
         
-        if file_path.suffix.lower() == '.md':
-            # Convert markdown to HTML and display in HTML label
-            html_content = markdown.markdown(content)
-            self.html_label.pack(fill=tk.BOTH, expand=True)
-            self.html_label.set_html(html_content)
+        current_section = None
+        section_content = []
+        
+        for line in content.split('\n'):
+            if "Off-Season Results" in line:
+                current_section = "Off-Season"
+            elif "Preseason Preview" in line:
+                if current_section:
+                    sections[current_section] = '\n'.join(section_content)
+                current_section = "Preseason"
+                section_content = []
+            elif "Regular Season Results" in line:
+                if current_section:
+                    sections[current_section] = '\n'.join(section_content)
+                current_section = "Regular Season"
+                section_content = []
+            elif "Playoff Results" in line:
+                if current_section:
+                    sections[current_section] = '\n'.join(section_content)
+                current_section = "Playoffs"
+                section_content = []
+            elif current_section:
+                section_content.append(line)
+        
+        # Add the last section
+        if current_section:
+            sections[current_section] = '\n'.join(section_content)
+        
+        return sections
+
+    def show_match_viewer(self):
+        if not self.match_viewer:
+            # Create new window for match viewer
+            viewer_window = tk.Toplevel(self)
+            viewer_window.title("Regular Season Results")
+            viewer_window.geometry("1200x800")
+            
+            self.match_viewer = MatchDetailsViewer(viewer_window)
+            self.match_viewer.pack(fill=tk.BOTH, expand=True)
+        
+        # Extract standings from current content
+        standings = []
+        current_text = self.standings_text.cget("text")
+        for line in current_text.split('\n'):
+            if line.strip() and not line.startswith('Regular Season'):
+                standings.append(line.strip())
+        
+        # Get the current region's content
+        file_path = Path(f"previous_results/{self.current_year}/{self.current_region}_results.txt")
+        print(f"Loading results from: {file_path}")
+        if file_path.exists():
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                print(f"Content length: {len(content)}")
+                self.match_viewer.current_content = content
+        
+        self.match_viewer.load_teams(standings)
+
+class MatchDetailsViewer(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        # Split window into two panes
+        self.paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
+        self.paned_window.pack(fill=tk.BOTH, expand=True)
+        
+        # Left pane - Teams
+        self.teams_frame = ttk.Frame(self.paned_window)
+        self.paned_window.add(self.teams_frame, weight=1)
+        
+        # Teams scrollable area
+        self.teams_canvas = tk.Canvas(self.teams_frame, width=200)
+        self.teams_scrollbar = ttk.Scrollbar(self.teams_frame, orient="vertical", command=self.teams_canvas.yview)
+        self.scrollable_teams_frame = ttk.Frame(self.teams_canvas)
+        
+        self.teams_canvas.configure(yscrollcommand=self.teams_scrollbar.set)
+        
+        # Pack teams scrollbar and canvas
+        self.teams_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.teams_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Create teams window
+        self.teams_window = self.teams_canvas.create_window((0, 0), window=self.scrollable_teams_frame, anchor="nw")
+        
+        # Right pane - Matches
+        self.matches_frame = ttk.Frame(self.paned_window)
+        self.paned_window.add(self.matches_frame, weight=3)
+        
+        # Matches title
+        self.matches_title = ttk.Label(self.matches_frame, text="Select a team to view matches", font=("Arial", 12, "bold"))
+        self.matches_title.pack(pady=10)
+        
+        # Matches scrollable area
+        self.matches_canvas = tk.Canvas(self.matches_frame)
+        self.matches_scrollbar = ttk.Scrollbar(self.matches_frame, orient="vertical", command=self.matches_canvas.yview)
+        self.scrollable_matches_frame = ttk.Frame(self.matches_canvas)
+        
+        self.matches_canvas.configure(yscrollcommand=self.matches_scrollbar.set)
+        
+        # Pack matches scrollbar and canvas
+        self.matches_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.matches_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Create matches window
+        self.matches_window = self.matches_canvas.create_window((0, 0), window=self.scrollable_matches_frame, anchor="nw")
+        
+        # Configure scrolling
+        def configure_teams_scroll(event):
+            self.teams_canvas.configure(scrollregion=self.teams_canvas.bbox("all"))
+            self.teams_canvas.itemconfig(self.teams_window, width=self.teams_canvas.winfo_width())
+            
+        def configure_matches_scroll(event):
+            self.matches_canvas.configure(scrollregion=self.matches_canvas.bbox("all"))
+            self.matches_canvas.itemconfig(self.matches_window, width=self.matches_canvas.winfo_width())
+        
+        self.scrollable_teams_frame.bind("<Configure>", configure_teams_scroll)
+        self.scrollable_matches_frame.bind("<Configure>", configure_matches_scroll)
+        
+        # Store the current results file content
+        self.current_content = ""
+
+    def load_teams(self, standings):
+        # Clear existing teams
+        for widget in self.scrollable_teams_frame.winfo_children():
+            widget.destroy()
+            
+        # Create team buttons
+        for team_data in standings:
+            # Skip empty lines
+            if not team_data.strip():
+                continue
+                
+            # Extract team name by finding the first digit and taking everything after it
+            # until the record (which is in parentheses or has numbers with dashes)
+            parts = team_data.split()
+            if not parts or not any(c.isdigit() for c in parts[0]):
+                continue
+                
+            # Find where the team name starts (after the ranking number)
+            start_idx = team_data.find('. ') + 2 if '. ' in team_data else 0
+            
+            # Find where the record starts (it will be in the format X-X)
+            end_idx = team_data.rfind(' ')
+            while end_idx > 0 and not team_data[end_idx:].strip()[0].isdigit():
+                end_idx = team_data.rfind(' ', 0, end_idx)
+                
+            if start_idx >= end_idx:
+                continue
+                
+            team_name = team_data[start_idx:end_idx].strip()
+            
+            btn = ttk.Button(self.scrollable_teams_frame, text=team_name,
+                            command=lambda t=team_name: self.show_team_matches(t))
+            btn.pack(pady=2)
+
+    def show_team_matches(self, team):
+        print(f"Looking for matches for team: {team}")
+        # Clear existing matches
+        for widget in self.scrollable_matches_frame.winfo_children():
+            widget.destroy()
+            
+        self.matches_title.config(text=f"{team} Matches")
+        
+        # Find and display all matches for the team
+        matches = self.find_team_matches(team)
+        print(f"Found {len(matches)} matches")
+        
+        if not matches:
+            # Show "No matches found" message
+            ttk.Label(self.scrollable_matches_frame, 
+                     text="No matches found for this team",
+                     font=("Arial", 10)).pack(pady=20)
         else:
-            # Display plain text
-            self.content_text.pack(fill=tk.BOTH, expand=True)
-            self.content_text.delete(1.0, tk.END)
-            self.content_text.insert(tk.END, content)
+            # Create widgets for each match
+            for match in matches:
+                print(f"Creating widget for match: {match}")
+                self.create_match_widget(match)
 
-    def on_select(self, event):
-        selected_items = self.tree.selection()
-        if not selected_items:
-            return
-            
-        selected_item = selected_items[0]
-        file_path = self.tree.item(selected_item)['values']
+    def find_team_matches(self, team):
+        print(f"Searching for matches with team: {team}")
+        matches = []
+        lines = self.current_content.split('\n')
         
-        if file_path:  # If it's a file (not a directory)
-            file_path = Path(file_path[0])
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    self.show_content(file_path, content)
-            except Exception as e:
-                self.content_text.delete(1.0, tk.END)
-                self.content_text.insert(tk.END, f"Error reading file: {str(e)}")
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Look for lines that start with a rating in parentheses
+            if line.startswith('(') and team in line:
+                try:
+                    # Extract the teams and scores
+                    match_line = line[line.find(')') + 1:].strip()
+                    teams_and_scores = match_line.split(' - ')
+                    
+                    # Split first part into team1 and score1
+                    team1_parts = teams_and_scores[0].rsplit(' ', 1)
+                    team1 = team1_parts[0].strip()
+                    score1 = team1_parts[1]
+                    
+                    # Split second part into score2 and team2
+                    team2_parts = teams_and_scores[1].split(' ', 1)
+                    score2 = team2_parts[0]
+                    team2 = team2_parts[1].split('(')[0].strip()  # Remove rating at end
+                    
+                    match_data = {
+                        'team1': team1,
+                        'team2': team2,
+                        'score1': score1,
+                        'score2': score2,
+                        'maps': []
+                    }
+                    
+                    # Look for map details
+                    i += 1
+                    while i < len(lines) and lines[i].strip():
+                        if "Map Sequence:" in lines[i]:
+                            i += 1
+                            # Skip ban/pick/decider lines
+                            while i < len(lines) and ("ban:" in lines[i] or "pick:" in lines[i] or "Decider:" in lines[i]):
+                                i += 1
+                            # Get map results
+                            while i < len(lines) and ":" in lines[i] and not lines[i].startswith('('):
+                                map_line = lines[i].strip()
+                                map_name, score = map_line.split(':')
+                                if not any(x in map_line.lower() for x in ['ban:', 'pick:', 'decider:']):
+                                    match_data['maps'].append({
+                                        'name': map_name.strip(),
+                                        'score': score.strip()
+                                    })
+                                i += 1
+                            i -= 1  # Back up one line
+                            break
+                    
+                    matches.append(match_data)
+                    print(f"Found match: {team1} vs {team2}")
+                    
+                except Exception as e:
+                    print(f"Error parsing match line: {line}")
+                    print(f"Error details: {str(e)}")
+            i += 1
+        
+        print(f"Total matches found for {team}: {len(matches)}")
+        return matches
 
-class ResultsFileHandler(FileSystemEventHandler):
-    def __init__(self, gui):
-        self.gui = gui
-        self.last_refresh = 0
-        self.refresh_cooldown = 1.0  # Seconds
-
-    def on_any_event(self, event):
-        current_time = time.time()
-        if current_time - self.last_refresh >= self.refresh_cooldown:
-            self.gui.after(100, self.gui.refresh_tree)
-            self.last_refresh = current_time
+    def create_match_widget(self, match_data):
+        # Create a frame for this match
+        match_frame = ttk.Frame(self.scrollable_matches_frame)
+        match_frame.pack(fill=tk.X, pady=5, padx=10)
+        
+        # Match score
+        score_text = f"{match_data['team1']} {match_data['score1']} - {match_data['score2']} {match_data['team2']}"
+        score_label = ttk.Label(match_frame, text=score_text, font=("Arial", 10))
+        score_label.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Details button and frame
+        details_frame = ttk.Frame(self.scrollable_matches_frame)
+        
+        def toggle_details():
+            if details_frame.winfo_manager():
+                details_frame.pack_forget()
+            else:
+                details_frame.pack(fill=tk.X, padx=30, pady=(0, 10))
+                # Show map details
+                for map_info in match_data['maps']:
+                    ttk.Label(details_frame, 
+                            text=f"{map_info['name']}: {map_info['score']}",
+                            font=("Arial", 9)).pack(anchor='w')
+        
+        ttk.Button(match_frame, text="Details", command=toggle_details).pack(side=tk.RIGHT)
 
 if __name__ == "__main__":
     app = ResultsViewer()
