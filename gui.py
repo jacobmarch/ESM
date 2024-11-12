@@ -95,6 +95,15 @@ class ResultsViewer(tk.Tk):
                 self.match_viewer = None
                 ttk.Button(scrollable_frame, text="View Results", 
                     command=self.show_match_viewer).pack(pady=5)
+            elif section == "Playoffs":
+                # Special handling for Playoffs section
+                self.playoff_standings = ttk.Label(scrollable_frame, wraplength=500)
+                self.playoff_standings.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+                
+                # Add view playoff bracket button
+                self.playoff_viewer = None
+                ttk.Button(scrollable_frame, text="View Playoff Bracket", 
+                          command=self.show_playoff_viewer).pack(pady=5)
             else:
                 # Other sections get regular labels
                 self.section_frames[section] = ttk.Label(scrollable_frame, wraplength=500)
@@ -125,9 +134,8 @@ class ResultsViewer(tk.Tk):
         self.show_dashboard()
 
     def select_region(self, region):
-        self.current_region = region  # Set the current region
-        # Adjusted file name to match the actual file's case
-        file_path = Path(f"previous_results/{self.current_year}/{region}_results.txt")
+        self.current_region = region
+        file_path = Path(f"previous_results/{self.current_year}/{self.current_region}_results.txt")
         if not file_path.exists():
             print(f"File not found: {file_path}")
             return
@@ -141,16 +149,21 @@ class ResultsViewer(tk.Tk):
         
         # Update section contents
         for section, text in sections.items():
-            if section != "Regular Season" and section in self.section_frames:
+            if section == "Regular Season":
+                # Regular Season is now a dict with standings and matches
+                if isinstance(text, dict):  # Check if text is a dictionary
+                    standings_text = "Regular Season Standings:\n"
+                    standings_text += "\n".join(text["standings"])
+                    self.standings_text.config(text=standings_text)
+                else:  # Handle legacy format where text might be a string
+                    self.standings_text.config(text=text)
+            elif section == "Playoffs":
+                # Extract final standings from playoff section
+                standings = self.extract_playoff_standings(text)
+                self.playoff_standings.config(text=standings)
+            elif section in self.section_frames:
+                # For other sections that are still strings
                 self.section_frames[section].config(text=text)
-        
-        # Update standings text separately
-        if "Regular Season" in sections:
-            standings_text = ""
-            for line in sections["Regular Season"].split('\n'):
-                if "Standings:" in line or (line.strip() and line[0].isdigit()):
-                    standings_text += line + '\n'
-            self.standings_text.config(text=standings_text)
 
     def parse_results_file(self, content):
         sections = {
@@ -164,6 +177,7 @@ class ResultsViewer(tk.Tk):
         section_content = []
         
         for line in content.split('\n'):
+            # Detect section headers
             if "Off-Season Results" in line:
                 current_section = "Off-Season"
             elif "Preseason Preview" in line:
@@ -182,23 +196,81 @@ class ResultsViewer(tk.Tk):
                 current_section = "Playoffs"
                 section_content = []
             elif current_section:
+                # Skip empty lines at the start of sections
+                if not section_content and not line.strip():
+                    continue
+                # Add content line
                 section_content.append(line)
         
         # Add the last section
         if current_section:
             sections[current_section] = '\n'.join(section_content)
         
+        # Process each section to extract relevant information
+        if "Regular Season" in sections:
+            standings = []
+            matches = []
+            
+            lines = sections["Regular Season"].split('\n')
+            in_standings = False
+            in_matches = False
+            
+            for line in lines:
+                if "Regular Season Standings:" in line:
+                    in_standings = True
+                    in_matches = False
+                    continue
+                elif "Match Results:" in line:
+                    in_standings = False
+                    in_matches = True
+                    continue
+                
+                if in_standings and line.strip() and not line.startswith('--'):
+                    standings.append(line.strip())
+                elif in_matches and line.startswith('('):
+                    matches.append(line.strip())
+            
+            sections["Regular Season"] = {
+                "standings": standings,
+                "matches": matches
+            }
+        
         return sections
 
+    def extract_playoff_standings(self, playoff_text):
+        standings = []
+        lines = playoff_text.split('\n')
+        for line in lines:
+            if "Final Standings:" in line:
+                idx = lines.index(line)
+                while idx + 1 < len(lines) and lines[idx + 1].strip():
+                    standings.append(lines[idx + 1])
+                    idx += 1
+                break
+        return "\n".join(["Final Standings:"] + standings)
+
     def show_match_viewer(self):
+        if self.match_viewer:
+            # If match viewer exists but window was closed
+            if not self.match_viewer.winfo_exists():
+                self.match_viewer = None
+        
         if not self.match_viewer:
             # Create new window for match viewer
             viewer_window = tk.Toplevel(self)
             viewer_window.title("Regular Season Results")
             viewer_window.geometry("1200x800")
             
+            # Create new match viewer
             self.match_viewer = MatchDetailsViewer(viewer_window)
             self.match_viewer.pack(fill=tk.BOTH, expand=True)
+            
+            # Handle window closing
+            def on_closing():
+                self.match_viewer = None
+                viewer_window.destroy()
+                
+            viewer_window.protocol("WM_DELETE_WINDOW", on_closing)
         
         # Extract standings from current content
         standings = []
@@ -217,6 +289,124 @@ class ResultsViewer(tk.Tk):
                 self.match_viewer.current_content = content
         
         self.match_viewer.load_teams(standings)
+
+    def show_playoff_viewer(self):
+        print("Opening playoff viewer")  # Debug print
+        
+        if self.playoff_viewer:
+            if not self.playoff_viewer.winfo_exists():
+                self.playoff_viewer = None
+        
+        if not self.playoff_viewer:
+            viewer_window = tk.Toplevel(self)
+            viewer_window.title(f"{self.current_region} Playoffs")
+            viewer_window.geometry("1200x800")
+            
+            self.playoff_viewer = PlayoffViewer(viewer_window)
+            self.playoff_viewer.pack(fill=tk.BOTH, expand=True)
+            
+            # Load playoff data
+            file_path = Path(f"previous_results/{self.current_year}/{self.current_region}_results.txt")
+            print(f"Loading file: {file_path}")  # Debug print
+            
+            if file_path.exists():
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    playoff_data = self.extract_playoff_matches(content)
+                    if playoff_data:
+                        print(f"Loading {len(playoff_data)} matches into viewer")  # Debug print
+                        self.playoff_viewer.load_playoff_data(playoff_data)
+                    else:
+                        print("No playoff data found")
+            else:
+                print("File not found:", file_path)  # Debug print
+            
+            def on_closing():
+                self.playoff_viewer = None
+                viewer_window.destroy()
+            
+            viewer_window.protocol("WM_DELETE_WINDOW", on_closing)
+
+    def extract_playoff_matches(self, content):
+        print("Extracting playoff matches from content")
+        matches = []
+        
+        # Find the playoff section based on region
+        playoff_header = f"{self.current_region} Playoff Results"
+        if playoff_header not in content:
+            print(f"No playoff section found for header: {playoff_header}")
+            return matches
+            
+        playoff_section = content.split(playoff_header)[1].split("Final Standings:")[0]
+        
+        current_round = None
+        current_bracket = None
+        round_number = 0
+        
+        for line in playoff_section.split('\n'):
+            line = line.strip()
+            
+            if not line:
+                continue
+                
+            if line.startswith("Round"):
+                round_number += 1
+                continue
+                
+            if "Upper Bracket:" in line:
+                current_bracket = "upper"
+                current_round = f"upper{round_number}"
+                continue
+                
+            if "Lower Bracket:" in line:
+                current_bracket = "lower"
+                current_round = f"lower{round_number}"
+                continue
+                
+            if "Lower Bracket with Upper Losers:" in line:
+                current_bracket = "lower"
+                current_round = f"lower{round_number}"
+                continue
+                
+            if "Grand Final:" in line:
+                current_round = "grand_finals"
+                continue
+                
+            if "(" in line and ")" in line and "-" in line and "Map Sequence:" not in line:
+                try:
+                    # Parse match line
+                    parts = line.split(" - ")
+                    if len(parts) == 2:
+                        # Extract team1 details
+                        team1_part = parts[0].split()
+                        rating1 = team1_part[0].strip("()")
+                        score1 = team1_part[-1]
+                        team1 = " ".join(team1_part[1:-1])
+                        
+                        # Extract team2 details
+                        team2_part = parts[1].split()
+                        score2 = team2_part[0]
+                        team2_with_rating = " ".join(team2_part[1:])
+                        team2 = team2_with_rating.split(" (")[0]
+                        rating2 = team2_with_rating.split(" (")[1].strip(")")
+                        
+                        match = {
+                            'round': current_round,
+                            'team1': team1,
+                            'team2': team2,
+                            'score1': score1,
+                            'score2': score2,
+                            'rating1': rating1,
+                            'rating2': rating2
+                        }
+                        matches.append(match)
+                        print(f"Added match: {match}")
+                except Exception as e:
+                    print(f"Error parsing match line: {line}")
+                    print(f"Error details: {str(e)}")
+        
+        print(f"Total matches extracted: {len(matches)}")
+        return matches
 
 class MatchDetailsViewer(ttk.Frame):
     def __init__(self, parent):
@@ -316,7 +506,6 @@ class MatchDetailsViewer(ttk.Frame):
             btn.pack(pady=2)
 
     def show_team_matches(self, team):
-        print(f"Looking for matches for team: {team}")
         # Clear existing matches
         for widget in self.scrollable_matches_frame.winfo_children():
             widget.destroy()
@@ -325,7 +514,6 @@ class MatchDetailsViewer(ttk.Frame):
         
         # Find and display all matches for the team
         matches = self.find_team_matches(team)
-        print(f"Found {len(matches)} matches")
         
         if not matches:
             # Show "No matches found" message
@@ -429,6 +617,188 @@ class MatchDetailsViewer(ttk.Frame):
                             font=("Arial", 9)).pack(anchor='w')
         
         ttk.Button(match_frame, text="Details", command=toggle_details).pack(side=tk.RIGHT)
+
+class PlayoffViewer(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        
+        # Create main layout
+        self.bracket_canvas = tk.Canvas(self, bg='white')
+        self.bracket_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Initialize matches list
+        self.matches = []
+        
+        # Add scrollbars
+        self.v_scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.bracket_canvas.yview)
+        self.h_scrollbar = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=self.bracket_canvas.xview)
+        self.bracket_canvas.configure(yscrollcommand=self.v_scrollbar.set, xscrollcommand=self.h_scrollbar.set)
+        
+        # Pack scrollbars
+        self.v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Bind resize event
+        self.bracket_canvas.bind('<Configure>', lambda e: self.draw_bracket())
+
+    def load_playoff_data(self, matches):
+        print("Loading playoff data:", matches)  # Debug print
+        self.matches = matches
+        self.draw_bracket()
+
+    def draw_bracket(self):
+        # Clear canvas
+        self.bracket_canvas.delete("all")
+        
+        # Safety check - if no matches, draw empty bracket
+        if not self.matches:
+            self.bracket_canvas.create_text(
+                self.bracket_canvas.winfo_width() / 2,
+                self.bracket_canvas.winfo_height() / 2,
+                text="No matches to display",
+                font=("Arial", 14)
+            )
+            return
+        
+        # Get canvas dimensions
+        canvas_width = self.bracket_canvas.winfo_width()
+        canvas_height = self.bracket_canvas.winfo_height()
+        
+        # Constants for layout
+        box_width = 200
+        box_height = 60
+        h_gap = 150  # Horizontal gap between rounds
+        v_gap = 100  # Vertical gap between matches
+        
+        # Starting positions
+        start_x = 50
+        upper_y = 50
+        
+        # Draw Upper Bracket
+        x = start_x
+        y = upper_y
+        
+        # Safely filter matches
+        def safe_round_check(match, prefix):
+            round_value = match.get('round')
+            return round_value is not None and str(round_value).startswith(prefix)
+        
+        upper_matches = [m for m in self.matches if safe_round_check(m, 'upper')]
+        
+        # Draw each round
+        round_positions = {}  # Store positions for connecting lines
+        
+        # Upper Bracket
+        rounds = ['upper1', 'upper2', 'upper3']
+        for round_idx, round_name in enumerate(rounds):
+            round_matches = [m for m in self.matches if m.get('round') == round_name]
+            y = upper_y
+            round_positions[round_name] = []
+            
+            for match in round_matches:
+                # Draw match box
+                box_coords = (x, y, x + box_width, y + box_height)
+                self.bracket_canvas.create_rectangle(box_coords, fill='white', outline='black')
+                match['bbox'] = box_coords
+                round_positions[round_name].append((x, y))
+                
+                # Draw match text
+                text = f"{match.get('team1', 'TBD')}\n{match.get('score1', '0')} - {match.get('score2', '0')}\n{match.get('team2', 'TBD')}"
+                self.bracket_canvas.create_text(x + box_width/2, y + box_height/2,
+                                             text=text, width=box_width-10,
+                                             anchor='center', justify='center')
+                
+                y += v_gap * (2 ** round_idx)
+            
+            x += box_width + h_gap
+        
+        # Lower Bracket
+        lower_y = upper_y + v_gap * 3
+        x = start_x + (box_width + h_gap) / 2
+        rounds = ['lower1', 'lower2', 'lower3', 'lower4']
+        
+        for round_idx, round_name in enumerate(rounds):
+            round_matches = [m for m in self.matches if m.get('round') == round_name]
+            y = lower_y
+            round_positions[round_name] = []
+            
+            for match in round_matches:
+                # Draw match box
+                box_coords = (x, y, x + box_width, y + box_height)
+                self.bracket_canvas.create_rectangle(box_coords, fill='white', outline='black')
+                match['bbox'] = box_coords
+                round_positions[round_name].append((x, y))
+                
+                # Draw match text
+                text = f"{match.get('team1', 'TBD')}\n{match.get('score1', '0')} - {match.get('score2', '0')}\n{match.get('team2', 'TBD')}"
+                self.bracket_canvas.create_text(x + box_width/2, y + box_height/2,
+                                             text=text, width=box_width-10,
+                                             anchor='center', justify='center')
+                
+                y += v_gap
+            
+            x += box_width + h_gap
+        
+        # Grand Finals
+        finals = [m for m in self.matches if m.get('round') == 'grand_finals']
+        if finals:
+            match = finals[0]
+            final_x = x
+            final_y = canvas_height * 0.4
+            
+            # Draw finals box
+            box_coords = (final_x, final_y, final_x + box_width, final_y + box_height)
+            self.bracket_canvas.create_rectangle(box_coords, fill='white', outline='black')
+            match['bbox'] = box_coords
+            
+            # Draw finals text
+            text = f"Grand Finals\n{match.get('team1', 'TBD')}\n{match.get('score1', '0')} - {match.get('score2', '0')}\n{match.get('team2', 'TBD')}"
+            self.bracket_canvas.create_text(final_x + box_width/2, final_y + box_height/2,
+                                         text=text, width=box_width-10,
+                                         anchor='center', justify='center')
+        
+        # Draw connecting lines
+        for round_name, positions in round_positions.items():
+            if len(positions) >= 2:
+                for i in range(0, len(positions), 2):
+                    if i + 1 < len(positions):
+                        x1, y1 = positions[i][0] + box_width, positions[i][1] + box_height/2
+                        x2, y2 = positions[i+1][0] + box_width, positions[i+1][1] + box_height/2
+                        mid_x = x1 + (h_gap/2)
+                        
+                        # Draw lines to next round
+                        self.bracket_canvas.create_line(x1, y1, mid_x, y1, fill='black')
+                        self.bracket_canvas.create_line(x1, y2, mid_x, y2, fill='black')
+                        self.bracket_canvas.create_line(mid_x, y1, mid_x, y2, fill='black')
+                        self.bracket_canvas.create_line(mid_x, (y1+y2)/2, mid_x + h_gap/2, (y1+y2)/2, fill='black')
+
+    def on_canvas_click(self, event):
+        # Check if click is within any match box
+        for match in self.matches:
+            if 'bbox' in match:
+                x1, y1, x2, y2 = match['bbox']
+                if x1 <= event.x <= x2 and y1 <= event.y <= y2:
+                    self.show_match_details(match)
+                    break
+
+    def show_match_details(self, match):
+        # Clear existing details
+        for widget in self.details_content.winfo_children():
+            widget.destroy()
+        
+        # Show match details
+        title = f"{match['team1']} vs {match['team2']}"
+        self.details_title.config(text=title)
+        
+        score = f"Final Score: {match['score1']} - {match['score2']}"
+        ttk.Label(self.details_content, text=score, font=("Arial", 10, "bold")).pack(pady=10)
+        
+        # Show map details
+        ttk.Label(self.details_content, text="Maps:", font=("Arial", 10, "bold")).pack(pady=(10,5))
+        for map_info in match['maps']:
+            ttk.Label(self.details_content, 
+                     text=f"{map_info['name']}: {map_info['score']}",
+                     font=("Arial", 9)).pack(anchor='w')
 
 if __name__ == "__main__":
     app = ResultsViewer()

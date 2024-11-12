@@ -106,7 +106,7 @@ class League:
         results_text += "=" * 50 + "\n"
         results_text += self.playoff_tournament.get_results_text()
         
-        save_results(self.current_year, f"{self.name}/Playoffs", results_text)
+        save_results(self.current_year, f"{self.name}", results_text)
         
         return self.playoff_results[:4]
 
